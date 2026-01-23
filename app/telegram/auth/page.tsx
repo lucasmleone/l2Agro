@@ -15,6 +15,7 @@ export default function AuthPage() {
 
     // --- 1. DETECTAR ENTORNO TELEGRAM (Al cargar la página) ---
     useEffect(() => {
+        console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
         // 💡 Verificamos si existe el objeto 'Telegram' en la ventana del navegador.
         // Esto solo existe si la web se abre desde dentro de la App de Telegram.
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -27,6 +28,7 @@ export default function AuthPage() {
 
             if (userId) {
                 setTelegramId(userId)
+
             } else {
                 // Si estás probando en PC (fuera de Telegram), esto se ejecutará.
                 // Puedes descomentar la línea de abajo para simular ser un usuario:
