@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next"; // 1. IMPORTA Viewport
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script"; // <--- IMPORTANTE: Importar Script
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,15 +18,24 @@ export const metadata: Metadata = {
   description: "Gestión de campo en Telegram",
 };
 
+// 👇 2. AGREGA ESTO. ES LA CLAVE PARA QUE NO SE VEA "CHICO" O "DEFORME"
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Evita que el usuario haga zoom por error
+  // Esto ayuda a que el teclado no rompa el diseño
+  interactiveWidget: "resizes-content",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
-        {/* Este script conecta tu web con el chat de Telegram */}
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
