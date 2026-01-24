@@ -2,24 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Reseteo básico para asegurar que no se vea deforme */
+:root {
+  color-scheme: dark;
+}
+
 html,
 body {
-  height: 100%;
+  background-color: #000000;
+  /* Negro puro para pantallas OLED */
+  color: #ffffff;
   width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  /* Evita el scroll horizontal */
-  background-color: #09090b;
-  /* Color Zinc-950 (Oscuro Profundo) */
-  color: #ffffff;
   -webkit-font-smoothing: antialiased;
+  /* Texto nítido */
 }
 
-/* Evita el zoom automático en inputs de iPhone */
+/* Evita que los inputs hagan zoom en iPhone */
 input,
-textarea,
-select {
+button,
+select,
+textarea {
+  font-family: inherit;
   font-size: 16px !important;
 }

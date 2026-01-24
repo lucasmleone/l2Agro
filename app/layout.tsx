@@ -1,31 +1,22 @@
-import type { Metadata, Viewport } from "next"; // 1. IMPORTA Viewport
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// ELIMINAMOS LAS FUENTES GEIST QUE SE VEN MAL EN MÓVIL
+// Usaremos la fuente nativa del sistema automáticamente.
 
 export const metadata: Metadata = {
-  title: "L2Agro Mini App",
-  description: "Gestión de campo en Telegram",
+  title: "L2Agro",
+  description: "App de Campo",
 };
 
-// 👇 2. AGREGA ESTO. ES LA CLAVE PARA QUE NO SE VEA "CHICO" O "DEFORME"
+// Configuración CRÍTICA para que no se vea "chico" en el celular
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false, // Evita que el usuario haga zoom por error
-  // Esto ayuda a que el teclado no rompa el diseño
-  interactiveWidget: "resizes-content",
+  userScalable: false,
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
@@ -41,7 +32,8 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {/* "font-sans" aplica la fuente nativa de Apple/Android */}
+      <body className="font-sans antialiased bg-black text-white">
         {children}
       </body>
     </html>

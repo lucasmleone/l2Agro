@@ -12,17 +12,13 @@ export default function AuthPage() {
     const [status, setStatus] = useState('')
 
     useEffect(() => {
-        // Configuración segura de Telegram
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready()
-
-            // Expandimos para asegurar que ocupe el espacio correctamente y no quede "corto"
             tg.expand()
-
-            // Pintamos la cabecera del mismo color que nuestro fondo
-            tg.setHeaderColor('#09090b')
-            tg.setBackgroundColor('#09090b')
+            // Colores negros para fusión total
+            tg.setHeaderColor('#000000')
+            tg.setBackgroundColor('#000000')
 
             const userId = tg.initDataUnsafe?.user?.id
             if (userId) setTelegramId(userId)
@@ -30,11 +26,10 @@ export default function AuthPage() {
     }, [])
 
     const handleAuth = async (action: 'LOGIN' | 'REGISTER') => {
-        if (!telegramId) return setStatus('⚠️ Error: Abre desde Telegram')
+        if (!telegramId) return setStatus('⚠️ Abre desde Telegram')
         if (!email || !password) return setStatus('⚠️ Faltan datos')
-
         setLoading(true)
-        setStatus('Procesando...')
+        setStatus('Cargando...')
 
         try {
             let userUuid = null
@@ -45,7 +40,7 @@ export default function AuthPage() {
             } else {
                 const { data, error } = await supabase.auth.signUp({ email, password })
                 if (error) throw error
-                if (!data.user) throw new Error("No se pudo crear el usuario")
+                if (!data.user) throw new Error("Error al crear usuario")
                 userUuid = data.user.id
             }
 
@@ -55,81 +50,79 @@ export default function AuthPage() {
 
             if (linkError) throw linkError
 
-            setStatus('✅ ¡Conectado!')
+            setStatus('✅ Conectado')
             setTimeout(() => router.push('/telegram/config'), 1000)
-
         } catch (error: any) {
             console.error(error)
-            setStatus('❌ Error: Datos inválidos')
+            setStatus('❌ Error: Verifica los datos')
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        // DISEÑO SOLIDO: Fondo oscuro fijo, centrado y limpio.
-        <div className="flex flex-col items-center justify-center min-h-screen w-full px-6 bg-zinc-950 text-white font-sans">
+        // DISEÑO LIMPIO Y ESTRUCTURADO
+        <div className="flex flex-col items-center justify-center min-h-screen w-full px-6 bg-black text-white">
 
-            {/* Tarjeta Visualmente Limpia */}
-            <div className="w-full max-w-sm space-y-6">
+            {/* Header */}
+            <div className="w-full max-w-sm mb-8 text-center">
+                <h1 className="text-3xl font-extrabold tracking-tight mb-2">
+                    L2Agro
+                </h1>
+                <p className="text-gray-400 text-base font-medium">
+                    Gestión de campo profesional
+                </p>
+            </div>
 
-                <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight text-white">
-                        L2Agro 🚜
-                    </h1>
-                    <p className="text-zinc-400 text-sm">
-                        Gestión de campo profesional
-                    </p>
+            {/* Formulario */}
+            <div className="w-full max-w-sm space-y-5">
+
+                {/* Input Email */}
+                <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-300 ml-1">Email</label>
+                    <input
+                        type="email"
+                        className="w-full h-14 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-lg placeholder-zinc-600 focus:border-blue-500 focus:bg-zinc-800 transition-all outline-none"
+                        placeholder="usuario@campo.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                    />
                 </div>
 
-                <div className="space-y-4">
-                    {/* Input Email */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase text-zinc-500 ml-1">Email</label>
-                        <input
-                            type="email"
-                            className="w-full h-12 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                            placeholder="nombre@campo.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                        />
-                    </div>
+                {/* Input Password */}
+                <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-300 ml-1">Contraseña</label>
+                    <input
+                        type="password"
+                        className="w-full h-14 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-lg placeholder-zinc-600 focus:border-blue-500 focus:bg-zinc-800 transition-all outline-none"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                    />
+                </div>
 
-                    {/* Input Password */}
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold uppercase text-zinc-500 ml-1">Contraseña</label>
-                        <input
-                            type="password"
-                            className="w-full h-12 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                        />
-                    </div>
+                {/* Estado */}
+                <div className="h-6 flex items-center justify-center">
+                    <p className="text-sm font-bold text-blue-400 animate-pulse">{status}</p>
+                </div>
 
-                    {/* Estado */}
-                    <div className="h-6 flex items-center justify-center">
-                        <p className="text-sm font-medium text-blue-400 animate-pulse">{status}</p>
-                    </div>
+                {/* Botones Grandes */}
+                <div className="space-y-3 pt-2">
+                    <button
+                        onClick={() => handleAuth('LOGIN')}
+                        disabled={loading}
+                        className="w-full h-14 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
+                    >
+                        Ingresar
+                    </button>
 
-                    {/* Botones - Colores FIJOS (Azul real) */}
-                    <div className="pt-2 space-y-3">
-                        <button
-                            onClick={() => handleAuth('LOGIN')}
-                            disabled={loading}
-                            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Iniciar Sesión
-                        </button>
-
-                        <button
-                            onClick={() => handleAuth('REGISTER')}
-                            disabled={loading}
-                            className="w-full py-3 text-sm text-zinc-400 font-medium hover:text-white transition-colors"
-                        >
-                            ¿No tienes cuenta? <span className="text-blue-400">Regístrate aquí</span>
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => handleAuth('REGISTER')}
+                        disabled={loading}
+                        className="w-full py-4 text-center text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                    >
+                        ¿No tienes cuenta? <span className="text-blue-400 font-bold">Crear una</span>
+                    </button>
                 </div>
 
             </div>
