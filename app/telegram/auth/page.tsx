@@ -21,7 +21,7 @@ export default function AuthPage() {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready() // Avisamos a Telegram que la app cargó
-            tg.expand() // Pedimos que ocupe toda la altura del celular
+
 
             // 💡 Intentamos leer el ID del usuario
             const userId = tg.initDataUnsafe?.user?.id
@@ -102,27 +102,37 @@ export default function AuthPage() {
 
     // --- 3. LA INTERFAZ VISUAL (HTML/Tailwind) ---
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 font-sans text-gray-800">
-            <div className="bg-white w-full max-w-sm p-8 rounded-2xl shadow-xl border border-gray-100">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 transition-colors">
+            {/* Tarjeta con fondo secundario de Telegram */}
+            <div
+                className="w-full max-w-sm p-8 rounded-2xl shadow-xl border border-gray-800"
+                style={{ backgroundColor: 'var(--tg-secondary-bg-color, #1c1c1e)' }}
+            >
 
-                <h1 className="text-2xl font-bold text-center mb-2 text-green-700">L2Agro 🚜</h1>
-                <p className="text-sm text-center text-gray-500 mb-8">
-                    Conecta tu cuenta para empezar a gestionar.
+                <h1 className="text-2xl font-bold text-center mb-2" style={{ color: 'var(--tg-text-color)' }}>
+                    L2Agro 🚜
+                </h1>
+                <p className="text-sm text-center mb-8" style={{ color: 'var(--tg-hint-color)' }}>
+                    Conecta tu cuenta para empezar.
                 </p>
 
-                {/* 💡 Debug Visual: Muestra el ID de Telegram si se detectó */}
                 {telegramId && (
-                    <div className="mb-4 text-xs text-center bg-green-50 text-green-700 py-1 px-3 rounded-full inline-block w-full">
-                        Telegram ID Detectado: {telegramId}
+                    <div className="mb-4 text-xs text-center py-1 px-3 rounded-full inline-block w-full bg-opacity-10 bg-white text-gray-300">
+                        ID: {telegramId}
                     </div>
                 )}
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: 'var(--tg-hint-color)' }}>Email</label>
                         <input
                             type="email"
-                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                            className="w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            style={{
+                                backgroundColor: 'var(--tg-bg-color, #000)',
+                                color: 'var(--tg-text-color)',
+                                borderColor: 'var(--tg-hint-color)'
+                            }}
                             placeholder="usuario@campo.com"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
@@ -130,39 +140,45 @@ export default function AuthPage() {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
+                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: 'var(--tg-hint-color)' }}>Contraseña</label>
                         <input
                             type="password"
-                            className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                            className="w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            style={{
+                                backgroundColor: 'var(--tg-bg-color, #000)',
+                                color: 'var(--tg-text-color)'
+                            }}
                             placeholder="••••••••"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                         />
                     </div>
 
-                    {/* Área de Mensajes de Estado (Carga, Error, Éxito) */}
-                    <p className="text-center text-sm font-bold min-h-[24px] text-green-600 animate-pulse">
+                    <p className="text-center text-sm font-bold min-h-[24px] text-green-500 animate-pulse">
                         {status}
                     </p>
 
-                    {/* Botones de Acción */}
-                    <div className="flex flex-col gap-3">
-                        <button
-                            onClick={() => handleAuth('LOGIN')}
-                            disabled={loading}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transform active:scale-95 transition-all disabled:opacity-50"
-                        >
-                            INGRESAR
-                        </button>
+                    {/* Botón Principal con color nativo de Telegram */}
+                    <button
+                        onClick={() => handleAuth('LOGIN')}
+                        disabled={loading}
+                        className="w-full font-bold py-3 rounded-xl shadow-lg transform active:scale-95 transition-all disabled:opacity-50"
+                        style={{
+                            backgroundColor: 'var(--tg-button-color, #2481cc)',
+                            color: 'var(--tg-button-text-color, #ffffff)'
+                        }}
+                    >
+                        INGRESAR
+                    </button>
 
-                        <button
-                            onClick={() => handleAuth('REGISTER')}
-                            disabled={loading}
-                            className="w-full bg-white text-green-700 border-2 border-green-600 font-bold py-3 rounded-xl hover:bg-green-50 active:scale-95 transition-all disabled:opacity-50"
-                        >
-                            CREAR CUENTA
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => handleAuth('REGISTER')}
+                        disabled={loading}
+                        className="w-full font-bold py-3 rounded-xl active:scale-95 transition-all disabled:opacity-50 border border-gray-600"
+                        style={{ color: 'var(--tg-button-color, #2481cc)' }}
+                    >
+                        CREAR CUENTA
+                    </button>
                 </div>
             </div>
         </div>
