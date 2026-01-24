@@ -3,18 +3,41 @@
 @tailwind utilities;
 
 :root {
-  /* Usamos las variables nativas de Telegram */
-  --tg-bg-color: var(--telegram-bg-color, #212121);
-  --tg-text-color: var(--telegram-text-color, #ffffff);
-  --tg-button-color: var(--telegram-button-color, #2EA6FF);
-  --tg-button-text-color: var(--telegram-button-text-color, #ffffff);
-  --tg-hint-color: var(--telegram-hint-color, #aaaaaa);
-  --tg-secondary-bg-color: var(--telegram-secondary-bg-color, #181818);
+  /* NOMBRES CORRECTOS DE TELEGRAM */
+  --tg-theme-bg-color: #212121;
+  --tg-theme-text-color: #ffffff;
+  --tg-theme-hint-color: #aaaaaa;
+  --tg-theme-link-color: #2481cc;
+  --tg-theme-button-color: #2481cc;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-secondary-bg-color: #1c1c1e;
+}
+
+/* Forzamos al HTML y BODY a ocupar todo el espacio con el color correcto */
+html {
+  background-color: var(--tg-theme-bg-color);
+  width: 100%;
+  min-height: 100vh;
+  /* Asegura que cubra toda la altura */
+  overflow-x: hidden;
+  /* Evita scroll lateral */
 }
 
 body {
-  /* Aplicamos el fondo y texto base de Telegram */
-  background-color: var(--tg-bg-color);
-  color: var(--tg-text-color);
+  background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  /* Importante para iOS: Evita el rebote elástico blanco */
+  overscroll-behavior-y: none;
+}
+
+/* Utilidad para evitar zoom al tocar inputs en iOS */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+  /* Mínimo 16px previene el zoom automático */
 }

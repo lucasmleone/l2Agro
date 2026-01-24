@@ -16,9 +16,10 @@ export default function AuthPage() {
             const tg = window.Telegram.WebApp
             tg.ready()
 
-            // Aseguramos que los colores coincidan
-            tg.setHeaderColor(tg.themeParams.bg_color || '#212121')
-            tg.setBackgroundColor(tg.themeParams.bg_color || '#212121')
+            // Forzamos los colores de la barra de Telegram para que se funda con la app
+            const bgColor = tg.themeParams.bg_color || '#212121'
+            tg.setHeaderColor(bgColor)
+            tg.setBackgroundColor(bgColor)
 
             const userId = tg.initDataUnsafe?.user?.id
             if (userId) setTelegramId(userId)
@@ -26,8 +27,6 @@ export default function AuthPage() {
     }, [])
 
     const handleAuth = async (action: 'LOGIN' | 'REGISTER') => {
-        // ... (Mantén tu lógica de auth igual que antes) ...
-        // Solo por brevedad no la copio toda, pero no cambies la lógica
         if (!telegramId) return setStatus('⚠️ Falta ID Telegram')
         if (!email || !password) return setStatus('⚠️ Faltan datos')
 
@@ -56,6 +55,7 @@ export default function AuthPage() {
             setStatus('✅ ¡Éxito!')
             setTimeout(() => router.push('/telegram/config'), 1000)
         } catch (error: any) {
+            console.error(error)
             setStatus('❌ Error: Verifica datos')
         } finally {
             setLoading(false)
@@ -63,74 +63,85 @@ export default function AuthPage() {
     }
 
     return (
-        // CAMBIO IMPORTANTE: 'min-h-[50vh]' en vez de screen. 
-        // 'justify-start' con padding superior para que no quede todo pegado arriba.
-        <div className="flex flex-col w-full px-6 pt-6 pb-10 font-sans mx-auto max-w-md">
+        // DISEÑO CORRECTO:
+        // 1. Usamos var(--tg-theme-...) que ahora SÍ existen en CSS.
+        // 2. Padding seguro para que no se pegue a los bordes.
+        <div className="flex flex-col items-center w-full min-h-screen px-5 pt-8 pb-10 font-sans">
 
-            {/* Encabezado */}
-            <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--tg-text-color)' }}>
+            {/* Título */}
+            <div className="w-full text-center mb-8">
+                <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--tg-theme-text-color)' }}>
                     L2Agro 🚜
                 </h1>
-                <p className="text-sm opacity-60 mt-1" style={{ color: 'var(--tg-hint-color)' }}>
-                    Conecta tu cuenta
+                <p className="text-base opacity-60" style={{ color: 'var(--tg-theme-hint-color)' }}>
+                    Gestión de Campo
                 </p>
             </div>
 
-            {/* Inputs Grandes */}
-            <div className="space-y-4 w-full">
-                <input
-                    type="email"
-                    // h-12 (48px) es el estándar táctil mínimo. text-base (16px) evita zoom.
-                    className="w-full h-14 px-4 rounded-xl outline-none text-lg border-2 border-transparent focus:border-blue-500 transition-colors"
-                    style={{
-                        backgroundColor: 'var(--tg-secondary-bg-color, #2d2d2d)',
-                        color: 'var(--tg-text-color)'
-                    }}
-                    placeholder="Email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                />
+            {/* Formulario */}
+            <div className="w-full max-w-sm space-y-5">
 
-                <input
-                    type="password"
-                    className="w-full h-14 px-4 rounded-xl outline-none text-lg border-2 border-transparent focus:border-blue-500 transition-colors"
-                    style={{
-                        backgroundColor: 'var(--tg-secondary-bg-color, #2d2d2d)',
-                        color: 'var(--tg-text-color)'
-                    }}
-                    placeholder="Contraseña"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                />
+                {/* Inputs con fondo secundario para contraste */}
+                <div>
+                    <label className="text-xs font-bold uppercase mb-1 ml-1 block opacity-50">Email</label>
+                    <input
+                        type="email"
+                        className="w-full h-12 px-4 rounded-xl outline-none font-medium shadow-sm transition-all focus:ring-2 focus:ring-blue-500/50"
+                        style={{
+                            backgroundColor: 'var(--tg-theme-secondary-bg-color, #2d2d2d)',
+                            color: 'var(--tg-theme-text-color)',
+                            borderColor: 'transparent'
+                        }}
+                        placeholder="tu@email.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                    />
+                </div>
 
+                <div>
+                    <label className="text-xs font-bold uppercase mb-1 ml-1 block opacity-50">Contraseña</label>
+                    <input
+                        type="password"
+                        className="w-full h-12 px-4 rounded-xl outline-none font-medium shadow-sm transition-all focus:ring-2 focus:ring-blue-500/50"
+                        style={{
+                            backgroundColor: 'var(--tg-theme-secondary-bg-color, #2d2d2d)',
+                            color: 'var(--tg-theme-text-color)',
+                            borderColor: 'transparent'
+                        }}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                    />
+                </div>
+
+                {/* Mensaje de Estado */}
                 <div className="h-6 flex items-center justify-center">
-                    <p className="text-sm font-bold text-blue-500 animate-pulse">
+                    <p className="text-sm font-bold animate-pulse" style={{ color: 'var(--tg-theme-button-color)' }}>
                         {status}
                     </p>
                 </div>
 
                 {/* Botones */}
-                <div className="pt-2 flex flex-col gap-3">
+                <div className="flex flex-col gap-3 mt-2">
                     <button
                         onClick={() => handleAuth('LOGIN')}
                         disabled={loading}
-                        className="w-full h-14 rounded-xl font-bold text-xl shadow-lg active:scale-95 transition-transform"
+                        className="w-full h-12 rounded-xl font-bold text-lg shadow-md active:scale-95 transition-transform"
                         style={{
-                            backgroundColor: 'var(--tg-button-color, #3390ec)',
-                            color: 'var(--tg-button-text-color, #ffffff)'
+                            backgroundColor: 'var(--tg-theme-button-color, #2481cc)',
+                            color: 'var(--tg-theme-button-text-color, #ffffff)'
                         }}
                     >
-                        INGRESAR
+                        Ingresar
                     </button>
 
                     <button
                         onClick={() => handleAuth('REGISTER')}
                         disabled={loading}
-                        className="w-full py-3 font-medium opacity-60 text-sm hover:opacity-100 transition-opacity"
-                        style={{ color: 'var(--tg-text-color)' }}
+                        className="w-full py-3 font-medium text-sm opacity-60 hover:opacity-100 transition-opacity"
+                        style={{ color: 'var(--tg-theme-text-color)' }}
                     >
-                        ¿No tienes cuenta? Crear una
+                        ¿No tienes cuenta? Regístrate
                     </button>
                 </div>
             </div>
