@@ -15,7 +15,9 @@ export default function AuthPage() {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready()
-            tg.expand()
+            // NO expandir - mantener modo compacto
+            // tg.expand()
+
             // Colores negros para fusión total
             tg.setHeaderColor('#000000')
             tg.setBackgroundColor('#000000')

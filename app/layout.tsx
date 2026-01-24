@@ -1,9 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-// ELIMINAMOS LAS FUENTES GEIST QUE SE VEN MAL EN MÓVIL
-// Usaremos la fuente nativa del sistema automáticamente.
+// Fuente Inter - moderna y legible
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap"
+});
 
 export const metadata: Metadata = {
   title: "L2Agro",
@@ -32,10 +37,10 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      {/* "font-sans" aplica la fuente nativa de Apple/Android */}
-      <body className="font-sans antialiased bg-black text-white">
+      <body className={`${inter.className} antialiased bg-black text-white`}>
         {children}
       </body>
     </html>
   );
 }
+
