@@ -5,6 +5,19 @@ interface Window {
             ready: () => void;
             expand: () => void;
             close: () => void;
+            // 👇 Agregamos estas definiciones nuevas
+            setHeaderColor: (color: string) => void;
+            setBackgroundColor: (color: string) => void;
+            themeParams: {
+                bg_color?: string;
+                text_color?: string;
+                hint_color?: string;
+                link_color?: string;
+                button_color?: string;
+                button_text_color?: string;
+                secondary_bg_color?: string;
+            };
+            // 👆 Fin de lo nuevo
             initDataUnsafe: {
                 user?: {
                     id: number;
@@ -13,7 +26,6 @@ interface Window {
                     username?: string;
                 };
             };
-            // Agregamos esto para evitar errores con botones
             MainButton: {
                 text: string;
                 color: string;
