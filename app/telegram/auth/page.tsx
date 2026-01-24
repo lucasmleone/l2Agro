@@ -68,36 +68,35 @@ export default function AuthPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '100vh',
+                justifyContent: 'flex-start',
                 width: '100%',
-                padding: '24px',
+                padding: '20px 20px 24px',
                 backgroundColor: '#000000',
                 color: '#ffffff',
                 boxSizing: 'border-box'
             }}
         >
-            {/* Logo con efecto glow */}
+            {/* Logo compacto */}
             <div style={{
-                marginBottom: '40px',
+                marginBottom: '24px',
                 textAlign: 'center' as const,
                 width: '100%',
-                maxWidth: '320px'
+                maxWidth: '300px'
             }}>
                 <div style={{
-                    fontSize: '42px',
+                    fontSize: '32px',
                     fontWeight: 800,
-                    letterSpacing: '-1px',
+                    letterSpacing: '-0.5px',
                     background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    marginBottom: '8px'
+                    marginBottom: '4px'
                 }}>
                     L2Agro
                 </div>
                 <p style={{
-                    color: 'rgba(161, 161, 170, 0.8)',
-                    fontSize: '15px',
+                    color: 'rgba(161, 161, 170, 0.7)',
+                    fontSize: '13px',
                     fontWeight: 500,
                     margin: 0
                 }}>
@@ -105,27 +104,27 @@ export default function AuthPage() {
                 </p>
             </div>
 
-            {/* Card del formulario con glassmorphism */}
+            {/* Card del formulario compacta */}
             <div style={{
                 width: '100%',
-                maxWidth: '320px',
-                padding: '28px 24px',
-                borderRadius: '20px',
+                maxWidth: '300px',
+                padding: '20px 18px',
+                borderRadius: '16px',
                 background: 'rgba(24, 24, 27, 0.6)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 border: '1px solid rgba(63, 63, 70, 0.4)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
             }}>
                 {/* Input Email */}
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '14px' }}>
                     <label style={{
                         display: 'block',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: 600,
                         color: 'rgba(161, 161, 170, 0.9)',
-                        marginBottom: '8px',
-                        marginLeft: '4px'
+                        marginBottom: '6px',
+                        marginLeft: '2px'
                     }}>
                         Email
                     </label>
@@ -137,13 +136,13 @@ export default function AuthPage() {
                         onChange={e => setEmail(e.target.value)}
                         style={{
                             width: '100%',
-                            height: '52px',
-                            padding: '0 16px',
-                            borderRadius: '12px',
+                            height: '46px',
+                            padding: '0 14px',
+                            borderRadius: '10px',
                             background: 'rgba(39, 39, 42, 0.8)',
                             border: '1px solid rgba(63, 63, 70, 0.6)',
                             color: '#ffffff',
-                            fontSize: '16px',
+                            fontSize: '15px',
                             outline: 'none',
                             boxSizing: 'border-box'
                         }}
@@ -151,14 +150,14 @@ export default function AuthPage() {
                 </div>
 
                 {/* Input Password */}
-                <div style={{ marginBottom: '24px' }}>
+                <div style={{ marginBottom: '18px' }}>
                     <label style={{
                         display: 'block',
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: 600,
                         color: 'rgba(161, 161, 170, 0.9)',
-                        marginBottom: '8px',
-                        marginLeft: '4px'
+                        marginBottom: '6px',
+                        marginLeft: '2px'
                     }}>
                         Contraseña
                     </label>
@@ -170,13 +169,13 @@ export default function AuthPage() {
                         onChange={e => setPassword(e.target.value)}
                         style={{
                             width: '100%',
-                            height: '52px',
-                            padding: '0 16px',
-                            borderRadius: '12px',
+                            height: '46px',
+                            padding: '0 14px',
+                            borderRadius: '10px',
                             background: 'rgba(39, 39, 42, 0.8)',
                             border: '1px solid rgba(63, 63, 70, 0.6)',
                             color: '#ffffff',
-                            fontSize: '16px',
+                            fontSize: '15px',
                             outline: 'none',
                             boxSizing: 'border-box'
                         }}
@@ -218,18 +217,18 @@ export default function AuthPage() {
                     className="tg-btn-primary"
                     style={{
                         width: '100%',
-                        height: '52px',
-                        borderRadius: '12px',
+                        height: '46px',
+                        borderRadius: '10px',
                         background: loading
                             ? 'rgba(59, 130, 246, 0.5)'
                             : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                         color: '#ffffff',
                         fontWeight: 600,
-                        fontSize: '16px',
+                        fontSize: '15px',
                         cursor: loading ? 'not-allowed' : 'pointer',
                         border: 'none',
-                        boxShadow: '0 4px 14px rgba(59, 130, 246, 0.3)',
-                        marginBottom: '16px'
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
+                        marginBottom: '8px'
                     }}
                 >
                     {loading ? 'Cargando...' : 'Ingresar'}
@@ -241,11 +240,11 @@ export default function AuthPage() {
                     disabled={loading}
                     style={{
                         width: '100%',
-                        padding: '14px',
+                        padding: '10px',
                         background: 'transparent',
                         border: 'none',
-                        color: 'rgba(161, 161, 170, 0.9)',
-                        fontSize: '14px',
+                        color: 'rgba(161, 161, 170, 0.8)',
+                        fontSize: '13px',
                         fontWeight: 500,
                         cursor: 'pointer'
                     }}
@@ -253,15 +252,6 @@ export default function AuthPage() {
                     ¿No tienes cuenta? <span style={{ color: '#60a5fa', fontWeight: 600 }}>Crear una</span>
                 </button>
             </div>
-
-            {/* Footer sutil */}
-            <p style={{
-                marginTop: '32px',
-                fontSize: '12px',
-                color: 'rgba(113, 113, 122, 0.6)'
-            }}>
-                Conectado con Telegram
-            </p>
         </div>
     )
 }
