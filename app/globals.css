@@ -20,11 +20,70 @@ body {
   /* Texto nítido */
 }
 
-/* Evita que los inputs hagan zoom en iPhone */
+/* Reset agresivo para Telegram WebApp */
 input,
 button,
 select,
 textarea {
   font-family: inherit;
   font-size: 16px !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  border-radius: 0;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+/* Inputs estilizados para Telegram */
+.tg-input {
+  width: 100% !important;
+  height: 56px !important;
+  padding: 0 16px !important;
+  border-radius: 14px !important;
+  background: rgba(39, 39, 42, 0.8) !important;
+  border: 1px solid rgba(63, 63, 70, 0.6) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+.tg-input::placeholder {
+  color: rgba(161, 161, 170, 0.6) !important;
+}
+
+.tg-input:focus {
+  border-color: rgba(59, 130, 246, 0.8) !important;
+  background: rgba(39, 39, 42, 1) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Botón principal */
+.tg-btn-primary {
+  width: 100% !important;
+  height: 56px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 17px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35) !important;
+}
+
+.tg-btn-primary:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
+  transform: translateY(-1px) !important;
+}
+
+.tg-btn-primary:active {
+  transform: scale(0.98) !important;
+}
+
+.tg-btn-primary:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
 }

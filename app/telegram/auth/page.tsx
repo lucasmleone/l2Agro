@@ -61,71 +61,205 @@ export default function AuthPage() {
     }
 
     return (
-        // DISEÑO LIMPIO Y ESTRUCTURADO
-        <div className="flex flex-col items-center justify-center min-h-screen w-full px-6 bg-black text-white">
-
-            {/* Header */}
-            <div className="w-full max-w-sm mb-8 text-center">
-                <h1 className="text-3xl font-extrabold tracking-tight mb-2">
+        <div
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh',
+                width: '100%',
+                padding: '24px',
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                boxSizing: 'border-box'
+            }}
+        >
+            {/* Logo con efecto glow */}
+            <div style={{
+                marginBottom: '40px',
+                textAlign: 'center' as const,
+                width: '100%',
+                maxWidth: '320px'
+            }}>
+                <div style={{
+                    fontSize: '42px',
+                    fontWeight: 800,
+                    letterSpacing: '-1px',
+                    background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    marginBottom: '8px'
+                }}>
                     L2Agro
-                </h1>
-                <p className="text-gray-400 text-base font-medium">
+                </div>
+                <p style={{
+                    color: 'rgba(161, 161, 170, 0.8)',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    margin: 0
+                }}>
                     Gestión de campo profesional
                 </p>
             </div>
 
-            {/* Formulario */}
-            <div className="w-full max-w-sm space-y-5">
-
+            {/* Card del formulario con glassmorphism */}
+            <div style={{
+                width: '100%',
+                maxWidth: '320px',
+                padding: '28px 24px',
+                borderRadius: '20px',
+                background: 'rgba(24, 24, 27, 0.6)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(63, 63, 70, 0.4)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+            }}>
                 {/* Input Email */}
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 ml-1">Email</label>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: 'rgba(161, 161, 170, 0.9)',
+                        marginBottom: '8px',
+                        marginLeft: '4px'
+                    }}>
+                        Email
+                    </label>
                     <input
                         type="email"
-                        className="w-full h-14 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-lg placeholder-zinc-600 focus:border-blue-500 focus:bg-zinc-800 transition-all outline-none"
+                        className="tg-input"
                         placeholder="usuario@campo.com"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
+                        style={{
+                            width: '100%',
+                            height: '52px',
+                            padding: '0 16px',
+                            borderRadius: '12px',
+                            background: 'rgba(39, 39, 42, 0.8)',
+                            border: '1px solid rgba(63, 63, 70, 0.6)',
+                            color: '#ffffff',
+                            fontSize: '16px',
+                            outline: 'none',
+                            boxSizing: 'border-box'
+                        }}
                     />
                 </div>
 
                 {/* Input Password */}
-                <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-300 ml-1">Contraseña</label>
+                <div style={{ marginBottom: '24px' }}>
+                    <label style={{
+                        display: 'block',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: 'rgba(161, 161, 170, 0.9)',
+                        marginBottom: '8px',
+                        marginLeft: '4px'
+                    }}>
+                        Contraseña
+                    </label>
                     <input
                         type="password"
-                        className="w-full h-14 px-4 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-lg placeholder-zinc-600 focus:border-blue-500 focus:bg-zinc-800 transition-all outline-none"
+                        className="tg-input"
                         placeholder="••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
+                        style={{
+                            width: '100%',
+                            height: '52px',
+                            padding: '0 16px',
+                            borderRadius: '12px',
+                            background: 'rgba(39, 39, 42, 0.8)',
+                            border: '1px solid rgba(63, 63, 70, 0.6)',
+                            color: '#ffffff',
+                            fontSize: '16px',
+                            outline: 'none',
+                            boxSizing: 'border-box'
+                        }}
                     />
                 </div>
 
                 {/* Estado */}
-                <div className="h-6 flex items-center justify-center">
-                    <p className="text-sm font-bold text-blue-400 animate-pulse">{status}</p>
-                </div>
+                {status && (
+                    <div style={{
+                        textAlign: 'center' as const,
+                        marginBottom: '20px',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        background: status.includes('✅')
+                            ? 'rgba(34, 197, 94, 0.15)'
+                            : status.includes('❌')
+                                ? 'rgba(239, 68, 68, 0.15)'
+                                : 'rgba(59, 130, 246, 0.15)'
+                    }}>
+                        <p style={{
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            margin: 0,
+                            color: status.includes('✅')
+                                ? '#4ade80'
+                                : status.includes('❌')
+                                    ? '#f87171'
+                                    : '#60a5fa'
+                        }}>
+                            {status}
+                        </p>
+                    </div>
+                )}
 
-                {/* Botones Grandes */}
-                <div className="space-y-3 pt-2">
-                    <button
-                        onClick={() => handleAuth('LOGIN')}
-                        disabled={loading}
-                        className="w-full h-14 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
-                    >
-                        Ingresar
-                    </button>
+                {/* Botón Principal */}
+                <button
+                    onClick={() => handleAuth('LOGIN')}
+                    disabled={loading}
+                    className="tg-btn-primary"
+                    style={{
+                        width: '100%',
+                        height: '52px',
+                        borderRadius: '12px',
+                        background: loading
+                            ? 'rgba(59, 130, 246, 0.5)'
+                            : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                        color: '#ffffff',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        border: 'none',
+                        boxShadow: '0 4px 14px rgba(59, 130, 246, 0.3)',
+                        marginBottom: '16px'
+                    }}
+                >
+                    {loading ? 'Cargando...' : 'Ingresar'}
+                </button>
 
-                    <button
-                        onClick={() => handleAuth('REGISTER')}
-                        disabled={loading}
-                        className="w-full py-4 text-center text-sm font-medium text-gray-400 hover:text-white transition-colors"
-                    >
-                        ¿No tienes cuenta? <span className="text-blue-400 font-bold">Crear una</span>
-                    </button>
-                </div>
-
+                {/* Link Registro */}
+                <button
+                    onClick={() => handleAuth('REGISTER')}
+                    disabled={loading}
+                    style={{
+                        width: '100%',
+                        padding: '14px',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(161, 161, 170, 0.9)',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        cursor: 'pointer'
+                    }}
+                >
+                    ¿No tienes cuenta? <span style={{ color: '#60a5fa', fontWeight: 600 }}>Crear una</span>
+                </button>
             </div>
+
+            {/* Footer sutil */}
+            <p style={{
+                marginTop: '32px',
+                fontSize: '12px',
+                color: 'rgba(113, 113, 122, 0.6)'
+            }}>
+                Conectado con Telegram
+            </p>
         </div>
     )
 }
