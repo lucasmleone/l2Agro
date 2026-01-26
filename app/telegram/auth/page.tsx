@@ -1,10 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
 export default function AuthPage() {
-    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [telegramId, setTelegramId] = useState<number | null>(null)
     const [email, setEmail] = useState('')
@@ -15,10 +12,6 @@ export default function AuthPage() {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready()
-            // NO expandir - mantener modo compacto
-            // tg.expand()
-
-            // Colores negros para fusión total
             tg.setHeaderColor('#000000')
             tg.setBackgroundColor('#000000')
 
@@ -34,37 +27,28 @@ export default function AuthPage() {
         setStatus('Cargando...')
 
         try {
-            let userUuid = null
-            if (action === 'LOGIN') {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-                if (error) throw error
-                userUuid = data.user.id
-            } else {
-                // Crear usuario en auth.users (el trigger de Supabase lo inserta automáticamente en public.Users)
-                const { data, error } = await supabase.auth.signUp({ email, password })
-                if (error) throw error
-                if (!data.user) throw new Error("Error al crear usuario")
-                userUuid = data.user.id
+            const response = await fetch('/api/telegram/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: telegramId, email, password, action })
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Error en autenticación')
             }
-
-            // 3. Crear/actualizar conexión de Telegram
-            const { error: linkError } = await supabase
-                .from('telegram_connections')
-                .upsert({ telegram_id: telegramId, user_id: userUuid }, { onConflict: 'telegram_id' })
-
-            if (linkError) throw linkError
 
             setStatus('✅ Conectado')
 
-            // 4. Cerrar la mini app de Telegram después de 1 segundo
+            // Cerrar la mini app de Telegram después de 1 segundo
             setTimeout(() => {
                 if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
                     window.Telegram.WebApp.close()
                 }
             }, 1000)
         } catch (error: any) {
-            console.error(error)
-            setStatus('❌ Error: ' + (error.message || 'Verifica los datos'))
+            setStatus('❌ Error: ' + error.message)
         } finally {
             setLoading(false)
         }

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 interface Campo {
     id: number
@@ -8,13 +8,13 @@ interface Campo {
 }
 
 export default function HomePage() {
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [campos, setCampos] = useState<Campo[]>([])
     const [selectedCampo, setSelectedCampo] = useState<number | null>(null)
     const [codigoGenerado, setCodigoGenerado] = useState<string | null>(null)
     const [telegramId, setTelegramId] = useState<number | null>(null)
     const [status, setStatus] = useState('')
-    const [debug, setDebug] = useState('')
 
     useEffect(() => {
         let tgId: number | null = null
@@ -38,90 +38,56 @@ export default function HomePage() {
 
     const loadCampos = async (tgId: number) => {
         try {
-            setDebug(`tgId: ${tgId}`)
+            const response = await fetch('/api/telegram/campos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: tgId })
+            })
 
-            // 1. Obtener user_id desde telegram_id
-            const { data: connection, error: connError } = await supabase
-                .from('telegram_connections')
-                .select('user_id')
-                .eq('telegram_id', tgId)
-                .single()
+            const data = await response.json()
 
-            if (connError) {
-                setDebug(`Error conn: ${connError.message}`)
-                setStatus('❌ Error telegram: ' + connError.message)
+            if (!response.ok) {
+                if (data.redirect) {
+                    router.push(data.redirect)
+                    return
+                }
+                setStatus('❌ ' + data.error)
                 return
             }
 
-            setDebug(`user_id: ${connection?.user_id}`)
-
-            if (!connection?.user_id) {
-                setStatus('⚠️ Telegram no vinculado')
-                return
-            }
-
-            // 2. Obtener campos donde el usuario es dueño (rol_id = 1)
-            const { data: camposData, error } = await supabase
-                .from('Campos_Usuarios')
-                .select('campo_id, Campos(id, name)')
-                .eq('user_id', connection.user_id)
-                .eq('rol_id', 1)
-
-            if (error) {
-                setDebug(`Error campos: ${error.message}`)
-                setStatus('❌ Error campos: ' + error.message)
-                return
-            }
-
-            setDebug(`Campos encontrados: ${camposData?.length || 0}`)
-
-            const camposFormateados = camposData?.map((cu: any) => ({
-                id: cu.Campos.id,
-                name: cu.Campos.name
-            })) || []
-
-            setCampos(camposFormateados)
-            if (camposFormateados.length > 0) {
-                setSelectedCampo(camposFormateados[0].id)
-                setDebug(`OK: ${camposFormateados.length} campos`)
-            } else {
-                setStatus('⚠️ 0 campos (rol_id=1)')
+            setCampos(data.campos)
+            if (data.campos.length > 0) {
+                setSelectedCampo(data.campos[0].id)
             }
         } catch (error: any) {
-            setDebug(`Catch: ${error.message}`)
             setStatus('❌ Error: ' + error.message)
         }
     }
 
-    const generarCodigo = () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-        let codigo = ''
-        for (let i = 0; i < 6; i++) {
-            codigo += chars.charAt(Math.floor(Math.random() * chars.length))
-        }
-        return codigo
-    }
-
     const handleGenerarInvitacion = async () => {
-        if (!selectedCampo) return setStatus('⚠️ Selecciona un campo')
+        if (!selectedCampo || !telegramId) return setStatus('⚠️ Selecciona un campo')
         setLoading(true)
         setStatus('')
         setCodigoGenerado(null)
 
         try {
-            const codigo = generarCodigo()
+            const response = await fetch('/api/telegram/invitacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: telegramId, campo_id: selectedCampo })
+            })
 
-            const { error } = await supabase
-                .from('invitaciones')
-                .insert({ codigo, campo_id: selectedCampo })
+            const data = await response.json()
 
-            if (error) throw error
+            if (!response.ok) {
+                setStatus('❌ ' + data.error)
+                return
+            }
 
-            setCodigoGenerado(codigo)
+            setCodigoGenerado(data.codigo)
             setStatus('✅ Código generado')
         } catch (error: any) {
-            console.error(error)
-            setStatus('❌ Error: ' + (error.message || 'No se pudo generar'))
+            setStatus('❌ Error: ' + error.message)
         } finally {
             setLoading(false)
         }
@@ -175,17 +141,6 @@ export default function HomePage() {
                 }}>
                     Panel de control
                 </p>
-                {/* Debug visible */}
-                {debug && (
-                    <p style={{
-                        color: '#facc15',
-                        fontSize: '10px',
-                        marginTop: '8px',
-                        fontFamily: 'monospace'
-                    }}>
-                        🔧 {debug}
-                    </p>
-                )}
             </div>
 
             {/* Card principal */}
