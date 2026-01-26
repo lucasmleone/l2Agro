@@ -30,7 +30,7 @@ export default function HomePage() {
             const tgId = tg.initDataUnsafe?.user?.id || null
             if (tgId) {
                 telegramIdRef.current = tgId
-                checkCampos(tgId)
+                checkRegistration(tgId)
             } else {
                 setLoading(false)
             }
@@ -39,19 +39,29 @@ export default function HomePage() {
         }
     }, [])
 
-    const checkCampos = async (tgId: number) => {
+    const checkRegistration = async (tgId: number) => {
         try {
+            // Primero verificar si está registrado
+            const checkResponse = await fetch('/api/telegram/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: tgId })
+            })
+            const checkData = await checkResponse.json()
+
+            // Si NO está registrado, redirigir a auth
+            if (!checkData.registered) {
+                router.replace('/telegram/auth')
+                return
+            }
+
+            // Si está registrado, cargar campos
             const response = await fetch('/api/telegram/campos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ telegram_id: tgId })
             })
             const data = await response.json()
-
-            if (!response.ok && data.redirect) {
-                router.push(data.redirect)
-                return
-            }
 
             setHasCampos(data.campos?.length > 0)
         } catch (error) {
@@ -96,7 +106,6 @@ export default function HomePage() {
         </button>
     )
 
-    // Iconos SVG simples
     const RainIcon = () => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />

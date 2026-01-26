@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Colores del tema
 const colors = {
@@ -15,7 +16,9 @@ const colors = {
 }
 
 export default function AuthPage() {
-    const [loading, setLoading] = useState(false)
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
     const [telegramId, setTelegramId] = useState<number | null>(null)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -30,9 +33,37 @@ export default function AuthPage() {
             tg.setBackgroundColor(colors.bg)
 
             const userId = tg.initDataUnsafe?.user?.id
-            if (userId) setTelegramId(userId)
+            if (userId) {
+                setTelegramId(userId)
+                checkRegistration(userId)
+            } else {
+                setLoading(false)
+            }
+        } else {
+            setLoading(false)
         }
     }, [])
+
+    const checkRegistration = async (tgId: number) => {
+        try {
+            const response = await fetch('/api/telegram/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: tgId })
+            })
+            const data = await response.json()
+
+            // Si YA está registrado, redirigir a home
+            if (data.registered) {
+                router.replace('/telegram/home')
+                return
+            }
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleAuth = async (action: 'LOGIN' | 'REGISTER') => {
         if (!telegramId) {
@@ -45,7 +76,7 @@ export default function AuthPage() {
             setIsError(true)
             return
         }
-        setLoading(true)
+        setSubmitting(true)
         setStatus('')
         setIsError(false)
 
@@ -65,17 +96,31 @@ export default function AuthPage() {
             setStatus('Conectado correctamente')
             setIsError(false)
 
+            // Redirigir a home después del login exitoso
             setTimeout(() => {
-                if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.close()
-                }
+                router.replace('/telegram/home')
             }, 1000)
         } catch (error: any) {
             setStatus(error.message)
             setIsError(true)
         } finally {
-            setLoading(false)
+            setSubmitting(false)
         }
+    }
+
+    if (loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                backgroundColor: colors.bg,
+                color: colors.textMuted
+            }}>
+                Cargando...
+            </div>
+        )
     }
 
     return (
@@ -215,27 +260,27 @@ export default function AuthPage() {
                 {/* Botón Principal */}
                 <button
                     onClick={() => handleAuth('LOGIN')}
-                    disabled={loading}
+                    disabled={submitting}
                     style={{
                         width: '100%',
                         height: '44px',
                         borderRadius: '8px',
-                        background: loading ? colors.cardBorder : colors.accent,
-                        color: loading ? colors.textDim : '#000',
+                        background: submitting ? colors.cardBorder : colors.accent,
+                        color: submitting ? colors.textDim : '#000',
                         fontWeight: 600,
                         fontSize: '14px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
+                        cursor: submitting ? 'not-allowed' : 'pointer',
                         border: 'none',
                         marginBottom: '8px'
                     }}
                 >
-                    {loading ? 'Cargando...' : 'Ingresar'}
+                    {submitting ? 'Cargando...' : 'Ingresar'}
                 </button>
 
                 {/* Link Registro */}
                 <button
                     onClick={() => handleAuth('REGISTER')}
-                    disabled={loading}
+                    disabled={submitting}
                     style={{
                         width: '100%',
                         padding: '10px',
