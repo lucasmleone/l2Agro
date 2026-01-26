@@ -40,12 +40,24 @@ export default function AuthPage() {
                 if (error) throw error
                 userUuid = data.user.id
             } else {
+                // 1. Crear usuario en auth.users
                 const { data, error } = await supabase.auth.signUp({ email, password })
                 if (error) throw error
                 if (!data.user) throw new Error("Error al crear usuario")
                 userUuid = data.user.id
+
+                // 2. Insertar en public.Users
+                const { error: userError } = await supabase
+                    .from('Users')
+                    .insert({ id: userUuid, email: email })
+
+                if (userError) {
+                    console.error('Error insertando en Users:', userError)
+                    throw userError
+                }
             }
 
+            // 3. Crear/actualizar conexión de Telegram
             const { error: linkError } = await supabase
                 .from('telegram_connections')
                 .upsert({ telegram_id: telegramId, user_id: userUuid }, { onConflict: 'telegram_id' })
@@ -53,10 +65,16 @@ export default function AuthPage() {
             if (linkError) throw linkError
 
             setStatus('✅ Conectado')
-            setTimeout(() => router.push('/telegram/config'), 1000)
+
+            // 4. Cerrar la mini app de Telegram después de 1 segundo
+            setTimeout(() => {
+                if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.close()
+                }
+            }, 1000)
         } catch (error: any) {
             console.error(error)
-            setStatus('❌ Error: Verifica los datos')
+            setStatus('❌ Error: ' + (error.message || 'Verifica los datos'))
         } finally {
             setLoading(false)
         }
