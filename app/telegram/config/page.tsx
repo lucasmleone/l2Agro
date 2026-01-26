@@ -2,6 +2,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Colores del tema
+const colors = {
+    bg: '#0f1419',
+    card: '#1a2029',
+    cardBorder: '#2a3441',
+    accent: '#22c55e',
+    accentDim: 'rgba(34, 197, 94, 0.15)',
+    text: '#e7e9ea',
+    textMuted: '#71767b',
+    textDim: '#536471',
+    error: '#f87171'
+}
+
 interface Campo {
     id: number
     name: string
@@ -23,8 +36,8 @@ export default function ConfigPage() {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready()
-            tg.setHeaderColor('#000000')
-            tg.setBackgroundColor('#000000')
+            tg.setHeaderColor(colors.bg)
+            tg.setBackgroundColor(colors.bg)
 
             const tgId = tg.initDataUnsafe?.user?.id || null
             if (tgId) {
@@ -65,7 +78,6 @@ export default function ConfigPage() {
 
         try {
             if (isCode) {
-                // Intentar unirse con código
                 const response = await fetch('/api/telegram/campos/unirse', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -74,12 +86,11 @@ export default function ConfigPage() {
                 const data = await response.json()
 
                 if (!response.ok) {
-                    setStatus('❌ ' + data.error)
+                    setStatus(data.error)
                     return
                 }
-                setStatus('✅ Te uniste al campo')
+                setStatus('Te uniste al campo correctamente')
             } else {
-                // Crear campo nuevo
                 const response = await fetch('/api/telegram/campos/crear', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -88,17 +99,18 @@ export default function ConfigPage() {
                 const data = await response.json()
 
                 if (!response.ok) {
-                    setStatus('❌ ' + data.error)
+                    setStatus(data.error)
                     return
                 }
-                setStatus('✅ Campo creado')
+                setStatus('Campo creado correctamente')
             }
 
             setInputValue('')
             setShowAgregar(false)
             loadCampos(tgId)
+            setTimeout(() => setStatus(''), 3000)
         } catch (error: any) {
-            setStatus('❌ Error: ' + error.message)
+            setStatus('Error: ' + error.message)
         } finally {
             setLoading(false)
         }
@@ -120,13 +132,13 @@ export default function ConfigPage() {
             const data = await response.json()
 
             if (!response.ok) {
-                setStatus('❌ ' + data.error)
+                setStatus(data.error)
                 return
             }
 
             setCodigoGenerado(data.codigo)
         } catch (error: any) {
-            setStatus('❌ Error: ' + error.message)
+            setStatus('Error: ' + error.message)
         } finally {
             setLoading(false)
         }
@@ -135,10 +147,35 @@ export default function ConfigPage() {
     const copiarCodigo = () => {
         if (codigoGenerado) {
             navigator.clipboard.writeText(codigoGenerado)
-            setStatus('📋 Copiado!')
+            setStatus('Código copiado')
             setTimeout(() => setStatus(''), 2000)
         }
     }
+
+    const BackIcon = () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m15 18-6-6 6-6" />
+        </svg>
+    )
+
+    const PlusIcon = () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" /><path d="M12 5v14" />
+        </svg>
+    )
+
+    const LinkIcon = () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+    )
+
+    const MapPinIcon = () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" />
+        </svg>
+    )
 
     return (
         <div style={{
@@ -146,8 +183,8 @@ export default function ConfigPage() {
             flexDirection: 'column',
             width: '100%',
             padding: '20px',
-            backgroundColor: '#000000',
-            color: '#ffffff',
+            backgroundColor: colors.bg,
+            color: colors.text,
             minHeight: '100vh',
             boxSizing: 'border-box'
         }}>
@@ -161,28 +198,33 @@ export default function ConfigPage() {
                 <button
                     onClick={() => router.back()}
                     style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '38px',
+                        height: '38px',
                         borderRadius: '10px',
-                        background: 'rgba(39, 39, 42, 0.6)',
-                        border: '1px solid rgba(63, 63, 70, 0.4)',
-                        color: '#a1a1aa',
-                        fontSize: '16px',
-                        cursor: 'pointer'
+                        background: colors.card,
+                        border: `1px solid ${colors.cardBorder}`,
+                        color: colors.textMuted,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                     }}
                 >
-                    ←
+                    <BackIcon />
                 </button>
                 <span style={{ fontSize: '18px', fontWeight: 600 }}>Configuración</span>
             </div>
 
             {/* Mis campos */}
             <div style={{ marginBottom: '20px' }}>
-                <p style={{ fontSize: '12px', color: '#71717a', marginBottom: '8px' }}>Mis campos</p>
+                <p style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Mis campos
+                </p>
                 {campos.length > 0 ? (
                     <div style={{
-                        background: 'rgba(39, 39, 42, 0.6)',
-                        borderRadius: '12px',
+                        background: colors.card,
+                        borderRadius: '10px',
+                        border: `1px solid ${colors.cardBorder}`,
                         overflow: 'hidden'
                     }}>
                         {campos.map((campo, i) => (
@@ -190,16 +232,20 @@ export default function ConfigPage() {
                                 key={campo.id}
                                 style={{
                                     padding: '14px 16px',
-                                    borderBottom: i < campos.length - 1 ? '1px solid rgba(63, 63, 70, 0.4)' : 'none',
-                                    fontSize: '14px'
+                                    borderBottom: i < campos.length - 1 ? `1px solid ${colors.cardBorder}` : 'none',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
                                 }}
                             >
-                                📍 {campo.name}
+                                <span style={{ color: colors.accent }}><MapPinIcon /></span>
+                                {campo.name}
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <p style={{ fontSize: '13px', color: '#52525b' }}>No tienes campos aún</p>
+                    <p style={{ fontSize: '13px', color: colors.textDim }}>No tienes campos aún</p>
                 )}
             </div>
 
@@ -210,24 +256,29 @@ export default function ConfigPage() {
                     onClick={() => { setShowAgregar(!showAgregar); setShowInvitar(false); setCodigoGenerado(null) }}
                     style={{
                         padding: '14px 16px',
-                        borderRadius: '12px',
-                        background: 'rgba(39, 39, 42, 0.6)',
-                        border: '1px solid rgba(63, 63, 70, 0.4)',
-                        color: '#ffffff',
+                        borderRadius: '10px',
+                        background: colors.card,
+                        border: `1px solid ${colors.cardBorder}`,
+                        color: colors.text,
                         fontSize: '14px',
                         textAlign: 'left',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px'
                     }}
                 >
-                    ➕ Agregar campo
+                    <span style={{ color: colors.accent }}><PlusIcon /></span>
+                    Agregar campo
                 </button>
 
                 {showAgregar && (
                     <div style={{
                         padding: '16px',
-                        borderRadius: '12px',
-                        background: 'rgba(24, 24, 27, 0.8)',
-                        border: '1px solid rgba(63, 63, 70, 0.4)'
+                        borderRadius: '10px',
+                        background: colors.card,
+                        border: `1px solid ${colors.cardBorder}`,
+                        marginLeft: '8px'
                     }}>
                         <input
                             type="text"
@@ -238,9 +289,9 @@ export default function ConfigPage() {
                                 width: '100%',
                                 padding: '12px',
                                 borderRadius: '8px',
-                                background: 'rgba(39, 39, 42, 0.8)',
-                                border: '1px solid rgba(63, 63, 70, 0.6)',
-                                color: '#ffffff',
+                                background: colors.bg,
+                                border: `1px solid ${colors.cardBorder}`,
+                                color: colors.text,
                                 fontSize: '14px',
                                 marginBottom: '12px',
                                 boxSizing: 'border-box'
@@ -252,18 +303,18 @@ export default function ConfigPage() {
                             style={{
                                 padding: '10px 20px',
                                 borderRadius: '8px',
-                                background: inputValue.trim() ? '#22c55e' : '#27272a',
-                                color: '#fff',
+                                background: inputValue.trim() ? colors.accent : colors.cardBorder,
+                                color: inputValue.trim() ? '#000' : colors.textDim,
                                 border: 'none',
                                 fontSize: '13px',
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 cursor: inputValue.trim() ? 'pointer' : 'not-allowed'
                             }}
                         >
                             {loading ? 'Procesando...' : 'Continuar'}
                         </button>
-                        <p style={{ fontSize: '11px', color: '#71717a', marginTop: '12px' }}>
-                            💡 Ingresá un nombre para crear un campo nuevo, o un código de 6 letras para unirte a uno existente.
+                        <p style={{ fontSize: '11px', color: colors.textMuted, marginTop: '12px', lineHeight: 1.4 }}>
+                            Ingresá un nombre para crear un campo nuevo, o un código de 6 caracteres para unirte a uno existente.
                         </p>
                     </div>
                 )}
@@ -275,24 +326,29 @@ export default function ConfigPage() {
                             onClick={() => { setShowInvitar(!showInvitar); setShowAgregar(false); setCodigoGenerado(null) }}
                             style={{
                                 padding: '14px 16px',
-                                borderRadius: '12px',
-                                background: 'rgba(39, 39, 42, 0.6)',
-                                border: '1px solid rgba(63, 63, 70, 0.4)',
-                                color: '#ffffff',
+                                borderRadius: '10px',
+                                background: colors.card,
+                                border: `1px solid ${colors.cardBorder}`,
+                                color: colors.text,
                                 fontSize: '14px',
                                 textAlign: 'left',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
                             }}
                         >
-                            🔗 Invitar usuario
+                            <span style={{ color: colors.accent }}><LinkIcon /></span>
+                            Invitar usuario
                         </button>
 
                         {showInvitar && (
                             <div style={{
                                 padding: '16px',
-                                borderRadius: '12px',
-                                background: 'rgba(24, 24, 27, 0.8)',
-                                border: '1px solid rgba(63, 63, 70, 0.4)'
+                                borderRadius: '10px',
+                                background: colors.card,
+                                border: `1px solid ${colors.cardBorder}`,
+                                marginLeft: '8px'
                             }}>
                                 {campos.length > 1 && (
                                     <select
@@ -302,9 +358,9 @@ export default function ConfigPage() {
                                             width: '100%',
                                             padding: '12px',
                                             borderRadius: '8px',
-                                            background: 'rgba(39, 39, 42, 0.8)',
-                                            border: '1px solid rgba(63, 63, 70, 0.6)',
-                                            color: '#ffffff',
+                                            background: colors.bg,
+                                            border: `1px solid ${colors.cardBorder}`,
+                                            color: colors.text,
                                             fontSize: '14px',
                                             marginBottom: '12px'
                                         }}
@@ -320,19 +376,20 @@ export default function ConfigPage() {
                                         onClick={copiarCodigo}
                                         style={{
                                             padding: '16px',
-                                            background: 'rgba(34, 197, 94, 0.15)',
-                                            borderRadius: '10px',
+                                            background: colors.accentDim,
+                                            borderRadius: '8px',
                                             textAlign: 'center',
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            border: `1px solid ${colors.accent}30`
                                         }}
                                     >
-                                        <p style={{ fontSize: '11px', color: '#a1a1aa', margin: '0 0 6px 0' }}>
+                                        <p style={{ fontSize: '11px', color: colors.textMuted, margin: '0 0 6px 0' }}>
                                             Toca para copiar
                                         </p>
                                         <p style={{
                                             fontSize: '24px',
                                             fontWeight: 700,
-                                            color: '#4ade80',
+                                            color: colors.accent,
                                             margin: 0,
                                             letterSpacing: '4px',
                                             fontFamily: 'monospace'
@@ -347,11 +404,11 @@ export default function ConfigPage() {
                                         style={{
                                             padding: '10px 20px',
                                             borderRadius: '8px',
-                                            background: '#3b82f6',
-                                            color: '#fff',
+                                            background: colors.accent,
+                                            color: '#000',
                                             border: 'none',
                                             fontSize: '13px',
-                                            fontWeight: 500,
+                                            fontWeight: 600,
                                             cursor: 'pointer'
                                         }}
                                     >
@@ -366,14 +423,22 @@ export default function ConfigPage() {
 
             {/* Status */}
             {status && (
-                <p style={{
-                    textAlign: 'center',
-                    fontSize: '13px',
+                <div style={{
                     marginTop: '16px',
-                    color: status.includes('✅') || status.includes('📋') ? '#4ade80' : '#f87171'
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: status.includes('Error') || status.includes('inválido') ? 'rgba(248, 113, 113, 0.15)' : colors.accentDim,
+                    border: `1px solid ${status.includes('Error') || status.includes('inválido') ? colors.error + '30' : colors.accent + '30'}`
                 }}>
-                    {status}
-                </p>
+                    <p style={{
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        margin: 0,
+                        color: status.includes('Error') || status.includes('inválido') ? colors.error : colors.accent
+                    }}>
+                        {status}
+                    </p>
+                </div>
             )}
         </div>
     )

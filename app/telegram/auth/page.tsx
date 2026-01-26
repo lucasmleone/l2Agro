@@ -1,19 +1,33 @@
 'use client'
 import { useState, useEffect } from 'react'
 
+// Colores del tema
+const colors = {
+    bg: '#0f1419',
+    card: '#1a2029',
+    cardBorder: '#2a3441',
+    accent: '#22c55e',
+    accentDim: 'rgba(34, 197, 94, 0.15)',
+    text: '#e7e9ea',
+    textMuted: '#71767b',
+    textDim: '#536471',
+    error: '#f87171'
+}
+
 export default function AuthPage() {
     const [loading, setLoading] = useState(false)
     const [telegramId, setTelegramId] = useState<number | null>(null)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [status, setStatus] = useState('')
+    const [isError, setIsError] = useState(false)
 
     useEffect(() => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready()
-            tg.setHeaderColor('#000000')
-            tg.setBackgroundColor('#000000')
+            tg.setHeaderColor(colors.bg)
+            tg.setBackgroundColor(colors.bg)
 
             const userId = tg.initDataUnsafe?.user?.id
             if (userId) setTelegramId(userId)
@@ -21,10 +35,19 @@ export default function AuthPage() {
     }, [])
 
     const handleAuth = async (action: 'LOGIN' | 'REGISTER') => {
-        if (!telegramId) return setStatus('⚠️ Abre desde Telegram')
-        if (!email || !password) return setStatus('⚠️ Faltan datos')
+        if (!telegramId) {
+            setStatus('Abre esta página desde Telegram')
+            setIsError(true)
+            return
+        }
+        if (!email || !password) {
+            setStatus('Completá todos los campos')
+            setIsError(true)
+            return
+        }
         setLoading(true)
-        setStatus('Cargando...')
+        setStatus('')
+        setIsError(false)
 
         try {
             const response = await fetch('/api/telegram/auth', {
@@ -39,55 +62,52 @@ export default function AuthPage() {
                 throw new Error(data.error || 'Error en autenticación')
             }
 
-            setStatus('✅ Conectado')
+            setStatus('Conectado correctamente')
+            setIsError(false)
 
-            // Cerrar la mini app de Telegram después de 1 segundo
             setTimeout(() => {
                 if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
                     window.Telegram.WebApp.close()
                 }
             }, 1000)
         } catch (error: any) {
-            setStatus('❌ Error: ' + error.message)
+            setStatus(error.message)
+            setIsError(true)
         } finally {
             setLoading(false)
         }
     }
 
     return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                width: '100%',
-                padding: '20px 20px 24px',
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                boxSizing: 'border-box'
-            }}
-        >
-            {/* Logo compacto */}
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            width: '100%',
+            padding: '20px',
+            backgroundColor: colors.bg,
+            color: colors.text,
+            boxSizing: 'border-box',
+            minHeight: '100vh'
+        }}>
+            {/* Logo */}
             <div style={{
-                marginBottom: '24px',
-                textAlign: 'center' as const,
+                marginBottom: '32px',
+                textAlign: 'center',
                 width: '100%',
                 maxWidth: '300px'
             }}>
                 <div style={{
-                    fontSize: '32px',
-                    fontWeight: 800,
-                    letterSpacing: '-0.5px',
-                    background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
+                    fontSize: '28px',
+                    fontWeight: 700,
+                    color: colors.accent,
                     marginBottom: '4px'
                 }}>
                     L2Agro
                 </div>
                 <p style={{
-                    color: 'rgba(161, 161, 170, 0.7)',
+                    color: colors.textMuted,
                     fontSize: '13px',
                     fontWeight: 500,
                     margin: 0
@@ -96,45 +116,42 @@ export default function AuthPage() {
                 </p>
             </div>
 
-            {/* Card del formulario compacta */}
+            {/* Card del formulario */}
             <div style={{
                 width: '100%',
                 maxWidth: '300px',
-                padding: '20px 18px',
-                borderRadius: '16px',
-                background: 'rgba(24, 24, 27, 0.6)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(63, 63, 70, 0.4)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+                padding: '20px',
+                borderRadius: '12px',
+                background: colors.card,
+                border: `1px solid ${colors.cardBorder}`
             }}>
                 {/* Input Email */}
                 <div style={{ marginBottom: '14px' }}>
                     <label style={{
                         display: 'block',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 600,
-                        color: 'rgba(161, 161, 170, 0.9)',
+                        color: colors.textMuted,
                         marginBottom: '6px',
-                        marginLeft: '2px'
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
                     }}>
                         Email
                     </label>
                     <input
                         type="email"
-                        className="tg-input"
-                        placeholder="usuario@campo.com"
+                        placeholder="usuario@ejemplo.com"
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         style={{
                             width: '100%',
-                            height: '46px',
+                            height: '44px',
                             padding: '0 14px',
-                            borderRadius: '10px',
-                            background: 'rgba(39, 39, 42, 0.8)',
-                            border: '1px solid rgba(63, 63, 70, 0.6)',
-                            color: '#ffffff',
-                            fontSize: '15px',
+                            borderRadius: '8px',
+                            background: colors.bg,
+                            border: `1px solid ${colors.cardBorder}`,
+                            color: colors.text,
+                            fontSize: '14px',
                             outline: 'none',
                             boxSizing: 'border-box'
                         }}
@@ -142,32 +159,32 @@ export default function AuthPage() {
                 </div>
 
                 {/* Input Password */}
-                <div style={{ marginBottom: '18px' }}>
+                <div style={{ marginBottom: '20px' }}>
                     <label style={{
                         display: 'block',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         fontWeight: 600,
-                        color: 'rgba(161, 161, 170, 0.9)',
+                        color: colors.textMuted,
                         marginBottom: '6px',
-                        marginLeft: '2px'
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
                     }}>
                         Contraseña
                     </label>
                     <input
                         type="password"
-                        className="tg-input"
                         placeholder="••••••••"
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         style={{
                             width: '100%',
-                            height: '46px',
+                            height: '44px',
                             padding: '0 14px',
-                            borderRadius: '10px',
-                            background: 'rgba(39, 39, 42, 0.8)',
-                            border: '1px solid rgba(63, 63, 70, 0.6)',
-                            color: '#ffffff',
-                            fontSize: '15px',
+                            borderRadius: '8px',
+                            background: colors.bg,
+                            border: `1px solid ${colors.cardBorder}`,
+                            color: colors.text,
+                            fontSize: '14px',
                             outline: 'none',
                             boxSizing: 'border-box'
                         }}
@@ -177,25 +194,18 @@ export default function AuthPage() {
                 {/* Estado */}
                 {status && (
                     <div style={{
-                        textAlign: 'center' as const,
-                        marginBottom: '20px',
-                        padding: '10px',
+                        marginBottom: '16px',
+                        padding: '12px',
                         borderRadius: '8px',
-                        background: status.includes('✅')
-                            ? 'rgba(34, 197, 94, 0.15)'
-                            : status.includes('❌')
-                                ? 'rgba(239, 68, 68, 0.15)'
-                                : 'rgba(59, 130, 246, 0.15)'
+                        background: isError ? 'rgba(248, 113, 113, 0.15)' : colors.accentDim,
+                        border: `1px solid ${isError ? colors.error + '30' : colors.accent + '30'}`
                     }}>
                         <p style={{
-                            fontSize: '14px',
-                            fontWeight: 600,
+                            fontSize: '13px',
+                            fontWeight: 500,
                             margin: 0,
-                            color: status.includes('✅')
-                                ? '#4ade80'
-                                : status.includes('❌')
-                                    ? '#f87171'
-                                    : '#60a5fa'
+                            textAlign: 'center',
+                            color: isError ? colors.error : colors.accent
                         }}>
                             {status}
                         </p>
@@ -206,20 +216,16 @@ export default function AuthPage() {
                 <button
                     onClick={() => handleAuth('LOGIN')}
                     disabled={loading}
-                    className="tg-btn-primary"
                     style={{
                         width: '100%',
-                        height: '46px',
-                        borderRadius: '10px',
-                        background: loading
-                            ? 'rgba(59, 130, 246, 0.5)'
-                            : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                        color: '#ffffff',
+                        height: '44px',
+                        borderRadius: '8px',
+                        background: loading ? colors.cardBorder : colors.accent,
+                        color: loading ? colors.textDim : '#000',
                         fontWeight: 600,
-                        fontSize: '15px',
+                        fontSize: '14px',
                         cursor: loading ? 'not-allowed' : 'pointer',
                         border: 'none',
-                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
                         marginBottom: '8px'
                     }}
                 >
@@ -235,13 +241,13 @@ export default function AuthPage() {
                         padding: '10px',
                         background: 'transparent',
                         border: 'none',
-                        color: 'rgba(161, 161, 170, 0.8)',
+                        color: colors.textMuted,
                         fontSize: '13px',
                         fontWeight: 500,
                         cursor: 'pointer'
                     }}
                 >
-                    ¿No tienes cuenta? <span style={{ color: '#60a5fa', fontWeight: 600 }}>Crear una</span>
+                    ¿No tenés cuenta? <span style={{ color: colors.accent, fontWeight: 600 }}>Crear una</span>
                 </button>
             </div>
         </div>
