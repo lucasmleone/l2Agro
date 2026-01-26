@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 // Colores del tema
@@ -20,7 +20,7 @@ interface Campo {
     name: string
 }
 
-export default function LluviaPage() {
+function LluviaForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const telegramIdRef = useRef<number | null>(null)
@@ -35,7 +35,6 @@ export default function LluviaPage() {
     const [isError, setIsError] = useState(false)
 
     useEffect(() => {
-        // Fecha por defecto: hoy
         const hoy = new Date().toISOString().split('T')[0]
         setFecha(hoy)
 
@@ -57,7 +56,6 @@ export default function LluviaPage() {
         }
     }, [])
 
-    // Prellenar con parámetros de URL
     useEffect(() => {
         const paramCampo = searchParams.get('campo')
         const paramFecha = searchParams.get('fecha')
@@ -79,7 +77,6 @@ export default function LluviaPage() {
 
             if (response.ok && data.campos?.length > 0) {
                 setCampos(data.campos)
-                // Solo setear si no viene por URL
                 if (!searchParams.get('campo')) {
                     setSelectedCampo(data.campos[0].id)
                 }
@@ -124,7 +121,6 @@ export default function LluviaPage() {
             setStatus('Registro guardado')
             setIsError(false)
 
-            // Volver a home después de 1.5 segundos
             setTimeout(() => {
                 router.push('/telegram/home')
             }, 1500)
@@ -168,7 +164,6 @@ export default function LluviaPage() {
             minHeight: '100vh',
             boxSizing: 'border-box'
         }}>
-            {/* Header */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -195,14 +190,12 @@ export default function LluviaPage() {
                 <span style={{ fontSize: '18px', fontWeight: 600 }}>Registrar lluvia</span>
             </div>
 
-            {/* Formulario */}
             <div style={{
                 background: colors.card,
                 borderRadius: '12px',
                 border: `1px solid ${colors.cardBorder}`,
                 padding: '20px'
             }}>
-                {/* Campo */}
                 <div style={{ marginBottom: '16px' }}>
                     <label style={{
                         display: 'block',
@@ -235,7 +228,6 @@ export default function LluviaPage() {
                     </select>
                 </div>
 
-                {/* Fecha */}
                 <div style={{ marginBottom: '16px' }}>
                     <label style={{
                         display: 'block',
@@ -266,7 +258,6 @@ export default function LluviaPage() {
                     />
                 </div>
 
-                {/* Milímetros */}
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{
                         display: 'block',
@@ -300,7 +291,6 @@ export default function LluviaPage() {
                     />
                 </div>
 
-                {/* Estado */}
                 {status && (
                     <div style={{
                         marginBottom: '16px',
@@ -321,7 +311,6 @@ export default function LluviaPage() {
                     </div>
                 )}
 
-                {/* Botón guardar */}
                 <button
                     onClick={handleSubmit}
                     disabled={submitting}
@@ -341,5 +330,24 @@ export default function LluviaPage() {
                 </button>
             </div>
         </div>
+    )
+}
+
+export default function LluviaPage() {
+    return (
+        <Suspense fallback={
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                backgroundColor: '#0f1419',
+                color: '#71767b'
+            }}>
+                Cargando...
+            </div>
+        }>
+            <LluviaForm />
+        </Suspense>
     )
 }
