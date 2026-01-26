@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Campo {
@@ -9,30 +9,35 @@ interface Campo {
 
 export default function HomePage() {
     const router = useRouter()
+    const telegramIdRef = useRef<number | null>(null)
     const [loading, setLoading] = useState(false)
+    const [loadingCampos, setLoadingCampos] = useState(true)
     const [campos, setCampos] = useState<Campo[]>([])
     const [selectedCampo, setSelectedCampo] = useState<number | null>(null)
     const [codigoGenerado, setCodigoGenerado] = useState<string | null>(null)
-    const [telegramId, setTelegramId] = useState<number | null>(null)
+    const [showInvitacion, setShowInvitacion] = useState(false)
+    const [showCrearCampo, setShowCrearCampo] = useState(false)
+    const [nuevoCampoNombre, setNuevoCampoNombre] = useState('')
     const [status, setStatus] = useState('')
 
     useEffect(() => {
-        let tgId: number | null = null
-
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
             tg.ready()
             tg.setHeaderColor('#000000')
             tg.setBackgroundColor('#000000')
 
-            tgId = tg.initDataUnsafe?.user?.id || null
-            if (tgId) setTelegramId(tgId)
-        }
-
-        if (tgId) {
-            loadCampos(tgId)
+            const tgId = tg.initDataUnsafe?.user?.id || null
+            if (tgId) {
+                telegramIdRef.current = tgId
+                loadCampos(tgId)
+            } else {
+                setStatus('⚠️ Abre desde Telegram')
+                setLoadingCampos(false)
+            }
         } else {
             setStatus('⚠️ Abre desde Telegram')
+            setLoadingCampos(false)
         }
     }, [])
 
@@ -61,11 +66,17 @@ export default function HomePage() {
             }
         } catch (error: any) {
             setStatus('❌ Error: ' + error.message)
+        } finally {
+            setLoadingCampos(false)
         }
     }
 
     const handleGenerarInvitacion = async () => {
-        if (!selectedCampo || !telegramId) return setStatus('⚠️ Selecciona un campo')
+        const tgId = telegramIdRef.current
+        if (!selectedCampo || !tgId) {
+            setStatus('⚠️ Selecciona un campo')
+            return
+        }
         setLoading(true)
         setStatus('')
         setCodigoGenerado(null)
@@ -74,7 +85,7 @@ export default function HomePage() {
             const response = await fetch('/api/telegram/invitacion', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegram_id: telegramId, campo_id: selectedCampo })
+                body: JSON.stringify({ telegram_id: tgId, campo_id: selectedCampo })
             })
 
             const data = await response.json()
@@ -85,7 +96,40 @@ export default function HomePage() {
             }
 
             setCodigoGenerado(data.codigo)
-            setStatus('✅ Código generado')
+        } catch (error: any) {
+            setStatus('❌ Error: ' + error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleCrearCampo = async () => {
+        const tgId = telegramIdRef.current
+        if (!nuevoCampoNombre.trim() || !tgId) {
+            setStatus('⚠️ Ingresa un nombre')
+            return
+        }
+        setLoading(true)
+        setStatus('')
+
+        try {
+            const response = await fetch('/api/telegram/campos/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegram_id: tgId, name: nuevoCampoNombre.trim() })
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                setStatus('❌ ' + data.error)
+                return
+            }
+
+            setStatus('✅ Campo creado')
+            setNuevoCampoNombre('')
+            setShowCrearCampo(false)
+            loadCampos(tgId)
         } catch (error: any) {
             setStatus('❌ Error: ' + error.message)
         } finally {
@@ -96,207 +140,204 @@ export default function HomePage() {
     const copiarCodigo = () => {
         if (codigoGenerado) {
             navigator.clipboard.writeText(codigoGenerado)
-            setStatus('📋 Código copiado!')
+            setStatus('📋 Copiado!')
+            setTimeout(() => setStatus(''), 2000)
         }
     }
 
+    const btnStyle = {
+        width: '100%',
+        padding: '14px',
+        borderRadius: '10px',
+        background: 'rgba(39, 39, 42, 0.8)',
+        border: '1px solid rgba(63, 63, 70, 0.6)',
+        color: '#ffffff',
+        fontSize: '14px',
+        fontWeight: 500,
+        cursor: 'pointer',
+        textAlign: 'left' as const,
+        marginBottom: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px'
+    }
+
     return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'flex-start',
-                width: '100%',
-                padding: '20px 20px 24px',
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                boxSizing: 'border-box',
-                minHeight: '100vh'
-            }}
-        >
-            {/* Logo */}
-            <div style={{
-                marginBottom: '24px',
-                textAlign: 'center' as const,
-                width: '100%',
-                maxWidth: '300px'
-            }}>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+            padding: '20px',
+            backgroundColor: '#000000',
+            color: '#ffffff',
+            minHeight: '100vh',
+            boxSizing: 'border-box'
+        }}>
+            {/* Header */}
+            <div style={{ marginBottom: '24px', textAlign: 'center', width: '100%' }}>
                 <div style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 800,
-                    letterSpacing: '-0.5px',
                     background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)',
                     WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    marginBottom: '4px'
+                    WebkitTextFillColor: 'transparent'
                 }}>
                     L2Agro
                 </div>
-                <p style={{
-                    color: 'rgba(161, 161, 170, 0.7)',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    margin: 0
-                }}>
-                    Panel de control
-                </p>
             </div>
 
-            {/* Card principal */}
+            {/* Card */}
             <div style={{
                 width: '100%',
-                maxWidth: '300px',
-                padding: '20px 18px',
+                maxWidth: '320px',
+                padding: '16px',
                 borderRadius: '16px',
                 background: 'rgba(24, 24, 27, 0.6)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(63, 63, 70, 0.4)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+                border: '1px solid rgba(63, 63, 70, 0.4)'
             }}>
-                {/* Sección Invitaciones */}
-                <div style={{ marginBottom: '20px' }}>
-                    <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: '#ffffff',
-                        marginBottom: '12px',
-                        marginTop: 0
-                    }}>
-                        🔗 Generar invitación
-                    </h3>
+                {loadingCampos ? (
+                    <p style={{ textAlign: 'center', color: '#a1a1aa' }}>Cargando...</p>
+                ) : (
+                    <>
+                        {/* Selector de campo actual */}
+                        {campos.length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ fontSize: '11px', color: '#71717a', marginBottom: '4px', display: 'block' }}>
+                                    Campo activo
+                                </label>
+                                <select
+                                    value={selectedCampo || ''}
+                                    onChange={e => setSelectedCampo(Number(e.target.value))}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        background: 'rgba(39, 39, 42, 0.8)',
+                                        border: '1px solid rgba(63, 63, 70, 0.6)',
+                                        color: '#ffffff',
+                                        fontSize: '15px'
+                                    }}
+                                >
+                                    {campos.map(campo => (
+                                        <option key={campo.id} value={campo.id}>{campo.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
-                    {/* Selector de campo */}
-                    {campos.length > 0 ? (
-                        <>
-                            <label style={{
-                                display: 'block',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                color: 'rgba(161, 161, 170, 0.9)',
-                                marginBottom: '6px',
-                                marginLeft: '2px'
-                            }}>
-                                Campo
-                            </label>
-                            <select
-                                value={selectedCampo || ''}
-                                onChange={e => setSelectedCampo(Number(e.target.value))}
-                                style={{
-                                    width: '100%',
-                                    height: '46px',
-                                    padding: '0 14px',
-                                    borderRadius: '10px',
-                                    background: 'rgba(39, 39, 42, 0.8)',
-                                    border: '1px solid rgba(63, 63, 70, 0.6)',
-                                    color: '#ffffff',
-                                    fontSize: '15px',
-                                    outline: 'none',
-                                    boxSizing: 'border-box',
-                                    marginBottom: '12px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {campos.map(campo => (
-                                    <option key={campo.id} value={campo.id}>
-                                        {campo.name}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <button
-                                onClick={handleGenerarInvitacion}
-                                disabled={loading}
-                                style={{
-                                    width: '100%',
-                                    height: '46px',
-                                    borderRadius: '10px',
-                                    background: loading
-                                        ? 'rgba(34, 197, 94, 0.5)'
-                                        : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                                    color: '#ffffff',
-                                    fontWeight: 600,
-                                    fontSize: '15px',
-                                    cursor: loading ? 'not-allowed' : 'pointer',
-                                    border: 'none',
-                                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.25)'
-                                }}
-                            >
-                                {loading ? 'Generando...' : 'Generar código'}
+                        {/* Menú de acciones */}
+                        <div>
+                            <button onClick={() => setShowCrearCampo(!showCrearCampo)} style={btnStyle}>
+                                ➕ Crear campo
                             </button>
-                        </>
-                    ) : (
-                        <p style={{
-                            color: 'rgba(161, 161, 170, 0.7)',
-                            fontSize: '13px',
-                            textAlign: 'center'
-                        }}>
-                            No tienes campos como dueño
-                        </p>
-                    )}
 
-                    {/* Código generado */}
-                    {codigoGenerado && (
-                        <div
-                            onClick={copiarCodigo}
-                            style={{
-                                marginTop: '16px',
-                                padding: '16px',
-                                borderRadius: '12px',
-                                background: 'rgba(34, 197, 94, 0.15)',
-                                border: '1px solid rgba(34, 197, 94, 0.3)',
-                                textAlign: 'center',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <p style={{
-                                fontSize: '12px',
-                                color: 'rgba(161, 161, 170, 0.8)',
-                                margin: '0 0 8px 0'
-                            }}>
-                                Código de invitación (toca para copiar)
-                            </p>
-                            <p style={{
-                                fontSize: '28px',
-                                fontWeight: 700,
-                                color: '#4ade80',
-                                margin: 0,
-                                letterSpacing: '4px',
-                                fontFamily: 'monospace'
-                            }}>
-                                {codigoGenerado}
-                            </p>
+                            {showCrearCampo && (
+                                <div style={{ marginBottom: '12px', marginLeft: '8px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Nombre del campo"
+                                        value={nuevoCampoNombre}
+                                        onChange={e => setNuevoCampoNombre(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '8px',
+                                            background: 'rgba(24, 24, 27, 0.8)',
+                                            border: '1px solid rgba(63, 63, 70, 0.6)',
+                                            color: '#ffffff',
+                                            fontSize: '14px',
+                                            marginBottom: '8px',
+                                            boxSizing: 'border-box'
+                                        }}
+                                    />
+                                    <button
+                                        onClick={handleCrearCampo}
+                                        disabled={loading}
+                                        style={{
+                                            padding: '8px 16px',
+                                            borderRadius: '6px',
+                                            background: '#22c55e',
+                                            color: '#fff',
+                                            border: 'none',
+                                            fontSize: '13px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {loading ? 'Creando...' : 'Crear'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {campos.length > 0 && (
+                                <>
+                                    <button onClick={() => { setShowInvitacion(!showInvitacion); setCodigoGenerado(null) }} style={btnStyle}>
+                                        🔗 Invitar usuario
+                                    </button>
+
+                                    {showInvitacion && (
+                                        <div style={{ marginBottom: '12px', marginLeft: '8px' }}>
+                                            {codigoGenerado ? (
+                                                <div
+                                                    onClick={copiarCodigo}
+                                                    style={{
+                                                        padding: '12px',
+                                                        background: 'rgba(34, 197, 94, 0.15)',
+                                                        borderRadius: '8px',
+                                                        textAlign: 'center',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    <p style={{ fontSize: '10px', color: '#a1a1aa', margin: '0 0 4px 0' }}>
+                                                        Toca para copiar
+                                                    </p>
+                                                    <p style={{
+                                                        fontSize: '22px',
+                                                        fontWeight: 700,
+                                                        color: '#4ade80',
+                                                        margin: 0,
+                                                        letterSpacing: '3px',
+                                                        fontFamily: 'monospace'
+                                                    }}>
+                                                        {codigoGenerado}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={handleGenerarInvitacion}
+                                                    disabled={loading}
+                                                    style={{
+                                                        padding: '8px 16px',
+                                                        borderRadius: '6px',
+                                                        background: '#3b82f6',
+                                                        color: '#fff',
+                                                        border: 'none',
+                                                        fontSize: '13px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {loading ? 'Generando...' : 'Generar código'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
-                    )}
-                </div>
 
-                {/* Estado */}
-                {status && (
-                    <div style={{
-                        textAlign: 'center' as const,
-                        marginTop: '16px',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        background: status.includes('✅') || status.includes('📋')
-                            ? 'rgba(34, 197, 94, 0.15)'
-                            : status.includes('❌')
-                                ? 'rgba(239, 68, 68, 0.15)'
-                                : 'rgba(59, 130, 246, 0.15)'
-                    }}>
-                        <p style={{
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            margin: 0,
-                            color: status.includes('✅') || status.includes('📋')
-                                ? '#4ade80'
-                                : status.includes('❌')
-                                    ? '#f87171'
-                                    : '#60a5fa'
-                        }}>
-                            {status}
-                        </p>
-                    </div>
+                        {/* Estado */}
+                        {status && (
+                            <p style={{
+                                textAlign: 'center',
+                                fontSize: '13px',
+                                marginTop: '12px',
+                                color: status.includes('✅') || status.includes('📋') ? '#4ade80' :
+                                    status.includes('❌') ? '#f87171' : '#60a5fa'
+                            }}>
+                                {status}
+                            </p>
+                        )}
+                    </>
                 )}
             </div>
         </div>
