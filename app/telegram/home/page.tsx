@@ -14,6 +14,7 @@ export default function HomePage() {
     const [codigoGenerado, setCodigoGenerado] = useState<string | null>(null)
     const [telegramId, setTelegramId] = useState<number | null>(null)
     const [status, setStatus] = useState('')
+    const [debug, setDebug] = useState('')
 
     useEffect(() => {
         let tgId: number | null = null
@@ -37,6 +38,8 @@ export default function HomePage() {
 
     const loadCampos = async (tgId: number) => {
         try {
+            setDebug(`tgId: ${tgId}`)
+
             // 1. Obtener user_id desde telegram_id
             const { data: connection, error: connError } = await supabase
                 .from('telegram_connections')
@@ -44,7 +47,15 @@ export default function HomePage() {
                 .eq('telegram_id', tgId)
                 .single()
 
-            if (connError || !connection?.user_id) {
+            if (connError) {
+                setDebug(`Error conn: ${connError.message}`)
+                setStatus('❌ Error telegram: ' + connError.message)
+                return
+            }
+
+            setDebug(`user_id: ${connection?.user_id}`)
+
+            if (!connection?.user_id) {
                 setStatus('⚠️ Telegram no vinculado')
                 return
             }
@@ -56,7 +67,13 @@ export default function HomePage() {
                 .eq('user_id', connection.user_id)
                 .eq('rol_id', 1)
 
-            if (error) throw error
+            if (error) {
+                setDebug(`Error campos: ${error.message}`)
+                setStatus('❌ Error campos: ' + error.message)
+                return
+            }
+
+            setDebug(`Campos encontrados: ${camposData?.length || 0}`)
 
             const camposFormateados = camposData?.map((cu: any) => ({
                 id: cu.Campos.id,
@@ -66,10 +83,13 @@ export default function HomePage() {
             setCampos(camposFormateados)
             if (camposFormateados.length > 0) {
                 setSelectedCampo(camposFormateados[0].id)
+                setDebug(`OK: ${camposFormateados.length} campos`)
+            } else {
+                setStatus('⚠️ 0 campos (rol_id=1)')
             }
         } catch (error: any) {
-            console.error(error)
-            setStatus('❌ Error cargando campos')
+            setDebug(`Catch: ${error.message}`)
+            setStatus('❌ Error: ' + error.message)
         }
     }
 
@@ -155,6 +175,17 @@ export default function HomePage() {
                 }}>
                     Panel de control
                 </p>
+                {/* Debug visible */}
+                {debug && (
+                    <p style={{
+                        color: '#facc15',
+                        fontSize: '10px',
+                        marginTop: '8px',
+                        fontFamily: 'monospace'
+                    }}>
+                        🔧 {debug}
+                    </p>
+                )}
             </div>
 
             {/* Card principal */}
