@@ -33,6 +33,19 @@ function LluviaForm() {
     const [mm, setMm] = useState('')
     const [status, setStatus] = useState('')
     const [isError, setIsError] = useState(false)
+    const [debugInfo, setDebugInfo] = useState('')
+
+    // Función para parsear start_param de Telegram
+    // Formato esperado: campo-1__fecha-2025-02-21__mm-20
+    const parseStartParam = (param: string) => {
+        const parts = param.split('__')
+        const data: any = {}
+        parts.forEach(part => {
+            const [key, value] = part.split('-')
+            if (key && value) data[key] = value
+        })
+        return data
+    }
 
     useEffect(() => {
         const hoy = new Date().toISOString().split('T')[0]
@@ -43,19 +56,34 @@ function LluviaForm() {
             tg.ready()
             tg.setHeaderColor(colors.bg)
             tg.setBackgroundColor(colors.bg)
+            tg.expand() // Expandir para mejor visibilidad
 
             const tgId = tg.initDataUnsafe?.user?.id || null
+            const startParam = tg.initDataUnsafe?.start_param
+
             if (tgId) {
                 telegramIdRef.current = tgId
                 loadCampos(tgId)
+
+                // Si hay start_param, usarlos
+                if (startParam) {
+                    const data = parseStartParam(startParam)
+                    if (data.campo) setSelectedCampo(parseInt(data.campo))
+                    if (data.fecha) setFecha(data.fecha)
+                    if (data.mm) setMm(data.mm)
+                    setDebugInfo(`Params received: ${startParam}`)
+                }
             } else {
                 setLoading(false)
+                setDebugInfo('No se detectó usuario de Telegram. Abre desde la App.')
             }
         } else {
             setLoading(false)
+            setDebugInfo('Telegram WebApp no detectada.')
         }
     }, [])
 
+    // Soporte legacy para URL params normales (útil para dev)
     useEffect(() => {
         const paramCampo = searchParams.get('campo')
         const paramFecha = searchParams.get('fecha')
@@ -77,8 +105,12 @@ function LluviaForm() {
 
             if (response.ok && data.campos?.length > 0) {
                 setCampos(data.campos)
-                if (!searchParams.get('campo')) {
-                    setSelectedCampo(data.campos[0].id)
+                // Solo setear default si no hay seleccionado
+                if (!selectedCampo) {
+                    // Esperar un tick para ver si useEffect de params setea algo
+                    setTimeout(() => {
+                        setSelectedCampo(prev => prev || data.campos[0].id)
+                    }, 100)
                 }
             }
         } catch (error) {
@@ -149,6 +181,33 @@ function LluviaForm() {
                 color: colors.textMuted
             }}>
                 Cargando...
+            </div>
+        )
+    }
+
+    // Si no hay telegram ID, mostrar error bloqueante
+    if (!telegramIdRef.current && !loading) {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh',
+                padding: '20px',
+                textAlign: 'center',
+                backgroundColor: colors.bg,
+                color: colors.text
+            }}>
+                <p style={{ fontSize: '16px', marginBottom: '10px' }}>⚠️ Acceso denegado</p>
+                <p style={{ fontSize: '13px', color: colors.textMuted }}>
+                    Debes abrir esta página desde Telegram.
+                </p>
+                {debugInfo && (
+                    <p style={{ fontSize: '10px', color: colors.textDim, marginTop: '20px', fontFamily: 'monospace' }}>
+                        Debug: {debugInfo}
+                    </p>
+                )}
             </div>
         )
     }

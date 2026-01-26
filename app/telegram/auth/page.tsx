@@ -55,7 +55,7 @@ export default function AuthPage() {
 
             // Si YA está registrado, redirigir a home
             if (data.registered) {
-                router.replace('/telegram/home')
+                window.location.href = '/telegram/home'
                 return
             }
         } catch (error) {
@@ -97,8 +97,9 @@ export default function AuthPage() {
             setIsError(false)
 
             // Redirigir a home después del login exitoso
+            // Redirigir a home después del login exitoso
             setTimeout(() => {
-                router.replace('/telegram/home')
+                window.location.href = '/telegram/home'
             }, 1000)
         } catch (error: any) {
             setStatus(error.message)
