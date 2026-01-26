@@ -40,21 +40,11 @@ export default function AuthPage() {
                 if (error) throw error
                 userUuid = data.user.id
             } else {
-                // 1. Crear usuario en auth.users
+                // Crear usuario en auth.users (el trigger de Supabase lo inserta automáticamente en public.Users)
                 const { data, error } = await supabase.auth.signUp({ email, password })
                 if (error) throw error
                 if (!data.user) throw new Error("Error al crear usuario")
                 userUuid = data.user.id
-
-                // 2. Insertar en public.Users
-                const { error: userError } = await supabase
-                    .from('Users')
-                    .insert({ id: userUuid, email: email })
-
-                if (userError) {
-                    console.error('Error insertando en Users:', userError)
-                    throw userError
-                }
             }
 
             // 3. Crear/actualizar conexión de Telegram
