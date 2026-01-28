@@ -43,12 +43,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No tienes acceso a este lote' }, { status: 403 })
         }
 
-        // 4. Obtener campañas del lote, ordenadas por más reciente primero
+        // 4. Obtener campañas del lote, ordenadas por nombre descendente
+        // Esto ordena "Soja 26/27" antes que "Soja 24/25" para que el período más reciente aparezca primero
         const { data: campanas, error } = await supabaseAdmin
             .from('Campañas')
             .select('id, name, created_at')
             .eq('lote_id', lote_id)
-            .order('created_at', { ascending: false })
+            .order('name', { ascending: false })
 
         if (error) {
             return NextResponse.json({ error: 'Error cargando campañas' }, { status: 500 })

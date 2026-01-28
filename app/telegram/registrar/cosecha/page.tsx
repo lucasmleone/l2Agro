@@ -91,11 +91,11 @@ function CosechaForm() {
             })
             const camposData = await camposRes.json()
 
-            // Cargar unidades
+            // Cargar unidades (tipo_unidad_id: 4 = Cosecha)
             const unidadesRes = await fetch('/api/telegram/unidades', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegram_id: tgId })
+                body: JSON.stringify({ telegram_id: tgId, tipo_unidad_id: 4 })
             })
             const unidadesData = await unidadesRes.json()
 
