@@ -331,6 +331,8 @@ function LluviaForm() {
                     </label>
                     <input
                         type="number"
+                        inputMode="decimal"
+                        pattern="[0-9]*"
                         placeholder="Ej: 24"
                         value={mm}
                         onChange={e => setMm(e.target.value)}
