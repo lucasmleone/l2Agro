@@ -18,6 +18,7 @@ const colors = {
 interface Campo {
     id: number
     name: string
+    isAdmin?: boolean
 }
 
 export default function ConfigPage() {
@@ -25,6 +26,7 @@ export default function ConfigPage() {
     const telegramIdRef = useRef<number | null>(null)
     const [loading, setLoading] = useState(false)
     const [campos, setCampos] = useState<Campo[]>([])
+    const adminCampos = campos.filter(c => c.isAdmin)
     const [showAgregar, setShowAgregar] = useState(false)
     const [showInvitar, setShowInvitar] = useState(false)
     const [selectedCampo, setSelectedCampo] = useState<number | null>(null)
@@ -57,8 +59,10 @@ export default function ConfigPage() {
             const data = await response.json()
             if (response.ok) {
                 setCampos(data.campos || [])
-                if (data.campos?.length > 0) {
-                    setSelectedCampo(data.campos[0].id)
+                // Seleccionar el primer campo admin para invitaciones
+                const firstAdmin = data.campos?.find((c: Campo) => c.isAdmin)
+                if (firstAdmin) {
+                    setSelectedCampo(firstAdmin.id)
                 }
             }
         } catch (error) {
@@ -284,7 +288,7 @@ export default function ConfigPage() {
                             type="text"
                             placeholder="Nombre o código de invitación"
                             value={inputValue}
-                            onChange={e => setInputValue(e.target.value)}
+                            onChange={e => setInputValue(e.target.value.toUpperCase())}
                             style={{
                                 width: '100%',
                                 padding: '12px',
@@ -319,8 +323,8 @@ export default function ConfigPage() {
                     </div>
                 )}
 
-                {/* Invitar usuario */}
-                {campos.length > 0 && (
+                {/* Invitar usuario - solo si tiene campos como admin */}
+                {adminCampos.length > 0 && (
                     <>
                         <button
                             onClick={() => { setShowInvitar(!showInvitar); setShowAgregar(false); setCodigoGenerado(null) }}
@@ -350,10 +354,10 @@ export default function ConfigPage() {
                                 border: `1px solid ${colors.cardBorder}`,
                                 marginLeft: '8px'
                             }}>
-                                {campos.length > 1 && (
+                                {adminCampos.length > 1 && (
                                     <select
                                         value={selectedCampo || ''}
-                                        onChange={e => setSelectedCampo(Number(e.target.value))}
+                                        onChange={e => { setSelectedCampo(Number(e.target.value)); setCodigoGenerado(null) }}
                                         style={{
                                             width: '100%',
                                             padding: '12px',
@@ -365,7 +369,7 @@ export default function ConfigPage() {
                                             marginBottom: '12px'
                                         }}
                                     >
-                                        {campos.map(campo => (
+                                        {adminCampos.map(campo => (
                                             <option key={campo.id} value={campo.id}>{campo.name}</option>
                                         ))}
                                     </select>

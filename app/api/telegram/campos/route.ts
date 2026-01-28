@@ -20,12 +20,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado', redirect: '/telegram/auth' }, { status: 401 })
         }
 
-        // 2. Obtener campos donde el usuario es admin (rol_id = 1)
+        // 2. Obtener TODOS los campos donde el usuario tiene acceso (cualquier rol)
         const { data: camposData, error } = await supabaseAdmin
             .from('Campos_Usuarios')
-            .select('campo_id, Campos(id, name)')
+            .select('campo_id, rol_id, Campos(id, name)')
             .eq('user_id', connection.user_id)
-            .eq('rol_id', 1)
 
         if (error) {
             return NextResponse.json({ error: 'Error cargando campos' }, { status: 500 })
@@ -33,7 +32,8 @@ export async function POST(request: Request) {
 
         const campos = camposData?.map((cu: any) => ({
             id: cu.Campos.id,
-            name: cu.Campos.name
+            name: cu.Campos.name,
+            isAdmin: cu.rol_id === 1
         })) || []
 
         return NextResponse.json({ campos })
