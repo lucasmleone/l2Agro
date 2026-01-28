@@ -36,6 +36,7 @@ function CampanaForm() {
     const telegramIdRef = useRef<number | null>(null)
 
     const [loading, setLoading] = useState(true)
+    const [loadingLotes, setLoadingLotes] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [campos, setCampos] = useState<Campo[]>([])
     const [lotes, setLotes] = useState<Lote[]>([])
@@ -50,14 +51,8 @@ function CampanaForm() {
     const [status, setStatus] = useState('')
     const [isError, setIsError] = useState(false)
 
-    // Años disponibles (actual y próximos)
+    // Año actual para valores por defecto
     const currentYear = new Date().getFullYear()
-    const years = [
-        { value: String(currentYear - 1).slice(-2), label: String(currentYear - 1).slice(-2) },
-        { value: String(currentYear).slice(-2), label: String(currentYear).slice(-2) },
-        { value: String(currentYear + 1).slice(-2), label: String(currentYear + 1).slice(-2) },
-        { value: String(currentYear + 2).slice(-2), label: String(currentYear + 2).slice(-2) }
-    ]
 
     useEffect(() => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -117,6 +112,7 @@ function CampanaForm() {
     }
 
     const loadLotes = async (tgId: number, campoId: number) => {
+        setLoadingLotes(true)
         try {
             const res = await fetch('/api/telegram/lotes', {
                 method: 'POST',
@@ -134,6 +130,8 @@ function CampanaForm() {
             }
         } catch (error) {
             console.error(error)
+        } finally {
+            setLoadingLotes(false)
         }
     }
 
@@ -344,9 +342,11 @@ function CampanaForm() {
                         value={selectedLote || ''}
                         onChange={e => setSelectedLote(Number(e.target.value))}
                         style={selectStyle}
-                        disabled={lotes.length === 0}
+                        disabled={loadingLotes || lotes.length === 0}
                     >
-                        {lotes.length === 0 ? (
+                        {loadingLotes ? (
+                            <option value="">Cargando...</option>
+                        ) : lotes.length === 0 ? (
                             <option value="">Sin lotes</option>
                         ) : (
                             lotes.map(lote => (
@@ -401,25 +401,27 @@ function CampanaForm() {
                         Período
                     </label>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <select
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={2}
+                            placeholder="26"
                             value={yearStart}
-                            onChange={e => setYearStart(e.target.value)}
-                            style={{ ...selectStyle, flex: 1 }}
-                        >
-                            {years.map(y => (
-                                <option key={y.value} value={y.value}>{y.label}</option>
-                            ))}
-                        </select>
-                        <span style={{ color: colors.textMuted }}>/</span>
-                        <select
+                            onChange={e => setYearStart(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                            style={{ ...selectStyle, flex: 1, textAlign: 'center' }}
+                        />
+                        <span style={{ color: colors.textMuted, fontSize: '18px' }}>/</span>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={2}
+                            placeholder="27"
                             value={yearEnd}
-                            onChange={e => setYearEnd(e.target.value)}
-                            style={{ ...selectStyle, flex: 1 }}
-                        >
-                            {years.map(y => (
-                                <option key={y.value} value={y.value}>{y.label}</option>
-                            ))}
-                        </select>
+                            onChange={e => setYearEnd(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                            style={{ ...selectStyle, flex: 1, textAlign: 'center' }}
+                        />
                     </div>
                 </div>
 

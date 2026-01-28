@@ -219,7 +219,7 @@ export default function HomePage() {
                 Registrar datos
             </p>
 
-            {/* Grid de acciones */}
+            {/* Grid de acciones diarias */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
@@ -227,12 +227,6 @@ export default function HomePage() {
                 width: '100%',
                 maxWidth: '320px'
             }}>
-                <ActionButton
-                    icon={<CampaignIcon />}
-                    label="Campaña"
-                    onClick={() => router.push('/telegram/registrar/campana')}
-                    disabled={!hasCampos}
-                />
                 <ActionButton
                     icon={<RainIcon />}
                     label="Lluvia"
@@ -258,6 +252,35 @@ export default function HomePage() {
                     disabled={!hasCampos}
                 />
             </div>
+
+            {/* Botón Campaña - separado porque es anual */}
+            <button
+                onClick={() => router.push('/telegram/registrar/campana')}
+                disabled={!hasCampos}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    maxWidth: '320px',
+                    marginTop: '16px',
+                    padding: '14px 20px',
+                    borderRadius: '12px',
+                    background: !hasCampos ? colors.card : colors.card,
+                    border: `1px solid ${!hasCampos ? colors.cardBorder : colors.accent}`,
+                    color: !hasCampos ? colors.textDim : colors.text,
+                    cursor: !hasCampos ? 'not-allowed' : 'pointer',
+                    opacity: !hasCampos ? 0.5 : 1,
+                    fontSize: '14px',
+                    fontWeight: 500
+                }}
+            >
+                <span style={{ color: !hasCampos ? colors.textDim : colors.accent }}>
+                    <CampaignIcon />
+                </span>
+                Nueva campaña
+            </button>
 
             {/* Mensaje si no tiene campos */}
             {!hasCampos && (

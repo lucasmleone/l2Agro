@@ -20,11 +20,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Obtener cultivos del usuario
+        // 2. Obtener cultivos (sin filtrar por user, ya que pueden ser compartidos)
         const { data: cultivos, error } = await supabaseAdmin
             .from('Cultivos')
             .select('id, name')
-            .eq('user_id', connection.user_id)
             .order('name')
 
         if (error) {
