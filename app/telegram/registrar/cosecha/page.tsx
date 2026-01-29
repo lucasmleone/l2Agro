@@ -83,21 +83,24 @@ function CosechaForm() {
 
     const loadInitialData = async (tgId: number) => {
         try {
-            // Cargar campos
-            const camposRes = await fetch('/api/telegram/campos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegram_id: tgId })
-            })
-            const camposData = await camposRes.json()
+            // Cargar campos y unidades en paralelo (independientes)
+            const [camposRes, unidadesRes] = await Promise.all([
+                fetch('/api/telegram/campos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: tgId })
+                }),
+                fetch('/api/telegram/unidades', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: tgId, tipo_unidad_id: 4 })
+                })
+            ])
 
-            // Cargar unidades (tipo_unidad_id: 4 = Cosecha)
-            const unidadesRes = await fetch('/api/telegram/unidades', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegram_id: tgId, tipo_unidad_id: 4 })
-            })
-            const unidadesData = await unidadesRes.json()
+            const [camposData, unidadesData] = await Promise.all([
+                camposRes.json(),
+                unidadesRes.json()
+            ])
 
             if (unidadesRes.ok) {
                 setUnidades(unidadesData.unidades || [])

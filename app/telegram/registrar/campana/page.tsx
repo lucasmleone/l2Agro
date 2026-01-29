@@ -80,26 +80,31 @@ function CampanaForm() {
 
     const loadInitialData = async (tgId: number) => {
         try {
-            // Cargar campos
-            const camposRes = await fetch('/api/telegram/campos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegram_id: tgId })
-            })
-            const camposData = await camposRes.json()
+            // Cargar campos y cultivos en paralelo (independientes)
+            const [camposRes, cultivosRes] = await Promise.all([
+                fetch('/api/telegram/campos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: tgId })
+                }),
+                fetch('/api/telegram/cultivos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegram_id: tgId })
+                })
+            ])
+
+            const [camposData, cultivosData] = await Promise.all([
+                camposRes.json(),
+                cultivosRes.json()
+            ])
+
             if (camposRes.ok && camposData.campos?.length > 0) {
                 setCampos(camposData.campos)
                 setSelectedCampo(camposData.campos[0].id)
                 loadLotes(tgId, camposData.campos[0].id)
             }
 
-            // Cargar cultivos
-            const cultivosRes = await fetch('/api/telegram/cultivos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegram_id: tgId })
-            })
-            const cultivosData = await cultivosRes.json()
             if (cultivosRes.ok && cultivosData.cultivos?.length > 0) {
                 setCultivos(cultivosData.cultivos)
                 setSelectedCultivo(cultivosData.cultivos[0].id)
