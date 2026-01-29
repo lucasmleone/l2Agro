@@ -1,3 +1,11 @@
+/**
+ * API: Registrar Cosecha
+ * 
+ * POST /api/telegram/cosecha
+ * Body: { telegram_id, campana_id, humedad?, rendimiento, unidad_id }
+ * Response: { success: true }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +17,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
         }
 
-        // 1. Obtener user_id desde telegram_id
+        // Obtener user_id desde telegram_id
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,7 +28,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Verificar que la campaña existe y obtener su lote
+        // Verificar que la campaña existe y obtener su campo (vía lote)
         const { data: campana, error: campError } = await supabaseAdmin
             .from('Campañas')
             .select('id, lote_id, Lotes(campo_id)')
@@ -31,12 +39,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Campaña no encontrada' }, { status: 404 })
         }
 
-        // 3. Verificar que el usuario tiene acceso al campo
+        // Extraer campo_id del lote relacionado
         const campoId = (campana as any).Lotes?.campo_id
         if (!campoId) {
             return NextResponse.json({ error: 'Error obteniendo campo' }, { status: 500 })
         }
 
+        // Verificar permiso del usuario
         const { data: permiso } = await supabaseAdmin
             .from('Campos_Usuarios')
             .select('id')
@@ -48,7 +57,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No tienes acceso a esta campaña' }, { status: 403 })
         }
 
-        // 4. Insertar la cosecha
+        // Insertar cosecha
         const { error: insertError } = await supabaseAdmin
             .from('Cosechas')
             .insert({
@@ -65,7 +74,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

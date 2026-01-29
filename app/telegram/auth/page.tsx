@@ -1,8 +1,22 @@
+/**
+ * Página: Autenticación de Telegram
+ * 
+ * Ruta: /telegram/auth
+ * 
+ * Permite a usuarios registrarse o iniciar sesión para vincular
+ * su cuenta de Telegram con la app.
+ * 
+ * Flujo:
+ * 1. Verifica si el telegram_id ya está vinculado
+ * 2. Si está vinculado, redirige a /telegram/home
+ * 3. Si no, muestra formulario de login/registro
+ */
+
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// Colores del tema
+// Paleta de colores del tema oscuro
 const colors = {
     bg: '#0f1419',
     card: '#1a2029',
@@ -25,6 +39,7 @@ export default function AuthPage() {
     const [status, setStatus] = useState('')
     const [isError, setIsError] = useState(false)
 
+    // Inicialización de Telegram WebApp
     useEffect(() => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
             const tg = window.Telegram.WebApp
@@ -44,6 +59,7 @@ export default function AuthPage() {
         }
     }, [])
 
+    // Verifica si el usuario ya está registrado
     const checkRegistration = async (tgId: number) => {
         try {
             const response = await fetch('/api/telegram/check', {
@@ -53,13 +69,12 @@ export default function AuthPage() {
             })
             const data = await response.json()
 
-            // Si YA está registrado, redirigir a home
             if (data.registered) {
                 window.location.href = '/telegram/home'
                 return
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso - se mostrará el formulario
         } finally {
             setLoading(false)
         }

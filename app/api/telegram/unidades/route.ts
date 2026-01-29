@@ -1,3 +1,15 @@
+/**
+ * API: Obtener Unidades
+ * 
+ * Endpoint: POST /api/telegram/unidades
+ * 
+ * Retorna unidades de medida, opcionalmente filtradas por tipo.
+ * Tipos: 1=Siembra, 2=Fertilizante, 3=Agroquímicos, 4=Cosecha, etc.
+ * 
+ * Body: { telegram_id, tipo_unidad_id? }
+ * Response: { unidades: [{ id, name }] }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +21,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id requerido' }, { status: 400 })
         }
 
-        // 1. Verificar que el telegram está vinculado
+        // Verificar telegram vinculado
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,12 +32,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Obtener unidades filtradas por tipo si se especifica
+        // Construir query base
         let query = supabaseAdmin
             .from('Unidades')
             .select('id, name')
             .order('id')
 
+        // Filtrar por tipo si se especifica
         if (tipo_unidad_id) {
             query = query.eq('tipo_unidad_id', tipo_unidad_id)
         }
@@ -38,7 +51,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ unidades: unidades || [] })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

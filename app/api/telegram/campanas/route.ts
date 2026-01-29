@@ -1,3 +1,11 @@
+/**
+ * API: Obtener Campañas de un Lote
+ * 
+ * POST /api/telegram/campanas
+ * Body: { telegram_id, lote_id }
+ * Response: { campanas: [{ id, name, created_at }] }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +17,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id y lote_id requeridos' }, { status: 400 })
         }
 
-        // 1. Obtener user_id desde telegram_id
+        // Obtener user_id desde telegram_id
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,7 +28,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Verificar que el lote existe y obtener su campo
+        // Verificar que el lote existe y obtener su campo
         const { data: lote, error: loteError } = await supabaseAdmin
             .from('Lotes')
             .select('id, campo_id')
@@ -31,7 +39,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Lote no encontrado' }, { status: 404 })
         }
 
-        // 3. Verificar que el usuario tiene acceso al campo
+        // Verificar permiso del usuario
         const { data: permiso } = await supabaseAdmin
             .from('Campos_Usuarios')
             .select('id')
@@ -43,7 +51,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No tienes acceso a este lote' }, { status: 403 })
         }
 
-        // 4. Obtener campañas del lote
+        // Obtener campañas del lote
         const { data: campanas, error } = await supabaseAdmin
             .from('Campañas')
             .select('id, name, created_at')
@@ -54,18 +62,17 @@ export async function POST(request: Request) {
         }
 
         // Ordenar por período extraído del nombre (ej: "Soja 24/25" -> "24/25")
-        // Así 26/27 aparece antes que 24/25
+        // Períodos más recientes primero (26/27 antes que 24/25)
         const sortedCampanas = (campanas || []).sort((a, b) => {
-            // Extraer período del nombre (últimos 5 caracteres: "XX/XX")
             const periodA = a.name?.match(/(\d{2}\/\d{2})$/)?.[1] || '00/00'
             const periodB = b.name?.match(/(\d{2}\/\d{2})$/)?.[1] || '00/00'
-            // Ordenar descendente
             return periodB.localeCompare(periodA)
         })
 
         return NextResponse.json({ campanas: sortedCampanas })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

@@ -1,3 +1,11 @@
+/**
+ * API: Obtener Campos del Usuario
+ * 
+ * POST /api/telegram/campos
+ * Body: { telegram_id }
+ * Response: { campos: [{ id, name, isAdmin }] }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +17,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id requerido' }, { status: 400 })
         }
 
-        // 1. Obtener user_id desde telegram_id
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,7 +27,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado', redirect: '/telegram/auth' }, { status: 401 })
         }
 
-        // 2. Obtener TODOS los campos donde el usuario tiene acceso (cualquier rol)
         const { data: camposData, error } = await supabaseAdmin
             .from('Campos_Usuarios')
             .select('campo_id, rol_id, Campos(id, name)')
@@ -38,7 +44,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ campos })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

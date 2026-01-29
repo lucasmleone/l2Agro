@@ -1,3 +1,11 @@
+/**
+ * API: Obtener Lotes de un Campo
+ * 
+ * POST /api/telegram/lotes
+ * Body: { telegram_id, campo_id }
+ * Response: { lotes: [{ id, name, ha }] }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +17,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id y campo_id requeridos' }, { status: 400 })
         }
 
-        // 1. Obtener user_id desde telegram_id
+        // Obtener user_id desde telegram_id
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,7 +28,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Verificar que el usuario tiene acceso al campo
+        // Verificar permiso del usuario
         const { data: permiso } = await supabaseAdmin
             .from('Campos_Usuarios')
             .select('id')
@@ -32,7 +40,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No tienes acceso a este campo' }, { status: 403 })
         }
 
-        // 3. Obtener lotes del campo
+        // Obtener lotes ordenados por nombre
         const { data: lotes, error } = await supabaseAdmin
             .from('Lotes')
             .select('id, name, ha')
@@ -45,7 +53,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ lotes: lotes || [] })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

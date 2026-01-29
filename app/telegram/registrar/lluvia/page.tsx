@@ -113,8 +113,8 @@ function LluviaForm() {
                     }, 100)
                 }
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso - se muestran errores en UI
         } finally {
             setLoading(false)
         }

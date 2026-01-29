@@ -64,8 +64,8 @@ export default function HomePage() {
             const data = await response.json()
 
             setHasCampos(data.campos?.length > 0)
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso - estado se maneja en UI
         } finally {
             setLoading(false)
         }

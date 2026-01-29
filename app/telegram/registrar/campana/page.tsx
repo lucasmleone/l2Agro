@@ -104,8 +104,8 @@ function CampanaForm() {
                 setCultivos(cultivosData.cultivos)
                 setSelectedCultivo(cultivosData.cultivos[0].id)
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso
         } finally {
             setLoading(false)
         }
@@ -128,8 +128,8 @@ function CampanaForm() {
                     setSelectedLote(null)
                 }
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso
         } finally {
             setLoadingLotes(false)
         }

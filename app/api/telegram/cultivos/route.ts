@@ -1,3 +1,14 @@
+/**
+ * API: Obtener Cultivos
+ * 
+ * Endpoint: POST /api/telegram/cultivos
+ * 
+ * Retorna todos los cultivos disponibles (compartidos entre usuarios).
+ * 
+ * Body: { telegram_id }
+ * Response: { cultivos: [{ id, name }] }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +20,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id requerido' }, { status: 400 })
         }
 
-        // 1. Obtener user_id desde telegram_id
+        // Verificar que el telegram está vinculado
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,7 +31,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Obtener cultivos (sin filtrar por user, ya que pueden ser compartidos)
+        // Obtener todos los cultivos (son compartidos, no se filtran por usuario)
         const { data: cultivos, error } = await supabaseAdmin
             .from('Cultivos')
             .select('id, name')
@@ -32,7 +43,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ cultivos: cultivos || [] })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

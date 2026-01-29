@@ -1,3 +1,11 @@
+/**
+ * API: Generar Código de Invitación
+ * 
+ * POST /api/telegram/invitacion
+ * Body: { telegram_id, campo_id }
+ * Response: { codigo: string }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -18,7 +26,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id y campo_id requeridos' }, { status: 400 })
         }
 
-        // 1. Verificar que el telegram_id existe y obtener user_id
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -29,7 +36,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Verificar que el usuario es admin de ese campo
         const { data: permisos, error: permError } = await supabaseAdmin
             .from('Campos_Usuarios')
             .select('id')
@@ -42,7 +48,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No tienes permiso para este campo' }, { status: 403 })
         }
 
-        // 3. Generar código e insertar invitación
         const codigo = generarCodigo()
 
         const { error: insertError } = await supabaseAdmin
@@ -55,7 +60,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ codigo })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

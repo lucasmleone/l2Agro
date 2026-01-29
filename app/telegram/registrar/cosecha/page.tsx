@@ -125,8 +125,8 @@ function CosechaForm() {
                 // Cargar lotes del campo
                 await loadLotes(tgId, campoId, paramLote ? Number(paramLote) : null, paramCampana ? Number(paramCampana) : null)
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso
         } finally {
             setLoading(false)
         }
@@ -153,8 +153,8 @@ function CosechaForm() {
                     setSelectedCampana(null)
                 }
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso
         } finally {
             setLoadingLotes(false)
         }
@@ -178,8 +178,8 @@ function CosechaForm() {
                     setSelectedCampana(null)
                 }
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso
         } finally {
             setLoadingCampanas(false)
         }

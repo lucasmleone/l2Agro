@@ -1,3 +1,14 @@
+/**
+ * API: Autenticación de Telegram
+ * 
+ * Endpoint: POST /api/telegram/auth
+ * 
+ * Maneja login y registro de usuarios vinculando su cuenta de Telegram.
+ * 
+ * Body: { telegram_id, email, password, action: 'LOGIN' | 'REGISTER' }
+ * Response: { success: true, user_id } o { error: string }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -5,6 +16,7 @@ export async function POST(request: Request) {
     try {
         const { telegram_id, email, password, action } = await request.json()
 
+        // Validar datos requeridos
         if (!telegram_id || !email || !password) {
             return NextResponse.json({ error: 'Faltan datos' }, { status: 400 })
         }
@@ -16,14 +28,14 @@ export async function POST(request: Request) {
         let userUuid: string | null = null
 
         if (action === 'LOGIN') {
-            // Verificar credenciales
+            // Verificar credenciales con Supabase Auth
             const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password })
             if (error) {
                 return NextResponse.json({ error: error.message }, { status: 401 })
             }
             userUuid = data.user.id
         } else {
-            // Registrar nuevo usuario
+            // Registrar nuevo usuario en Supabase Auth
             const { data, error } = await supabaseAdmin.auth.signUp({ email, password })
             if (error) {
                 return NextResponse.json({ error: error.message }, { status: 400 })
@@ -32,11 +44,10 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: 'Error al crear usuario' }, { status: 500 })
             }
             userUuid = data.user.id
-
-            // El trigger de Supabase debería crear el usuario en public.Users automáticamente
+            // Nota: Un trigger de Supabase crea el perfil en public.Users automáticamente
         }
 
-        // Crear/actualizar conexión de Telegram
+        // Vincular Telegram ID con el usuario (upsert para evitar duplicados)
         const { error: linkError } = await supabaseAdmin
             .from('telegram_connections')
             .upsert({ telegram_id, user_id: userUuid }, { onConflict: 'telegram_id' })
@@ -47,7 +58,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, user_id: userUuid })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

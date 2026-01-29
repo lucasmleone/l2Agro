@@ -1,3 +1,14 @@
+/**
+ * API: Crear Campo
+ * 
+ * Endpoint: POST /api/telegram/campos/crear
+ * 
+ * Crea un nuevo campo y asigna al usuario como administrador.
+ * 
+ * Body: { telegram_id, name }
+ * Response: { success: true, campo_id } o { error: string }
+ */
+
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-server'
 
@@ -9,7 +20,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'telegram_id y name requeridos' }, { status: 400 })
         }
 
-        // 1. Obtener user_id desde telegram_id
+        // Obtener user_id desde telegram_id
         const { data: connection, error: connError } = await supabaseAdmin
             .from('telegram_connections')
             .select('user_id')
@@ -20,7 +31,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Telegram no vinculado' }, { status: 401 })
         }
 
-        // 2. Crear el campo
+        // Crear el campo
         const { data: campo, error: campoError } = await supabaseAdmin
             .from('Campos')
             .insert({ name })
@@ -31,7 +42,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Error creando campo' }, { status: 500 })
         }
 
-        // 3. Asociar el usuario al campo como admin (rol_id = 1)
+        // Asociar usuario al campo
         const { error: linkError } = await supabaseAdmin
             .from('Campos_Usuarios')
             .insert({
@@ -46,7 +57,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, campo_id: campo.id })
 
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Error desconocido'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

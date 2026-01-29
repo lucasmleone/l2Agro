@@ -59,14 +59,14 @@ export default function ConfigPage() {
             const data = await response.json()
             if (response.ok) {
                 setCampos(data.campos || [])
-                // Seleccionar el primer campo admin para invitaciones
+                // Seleccionar el primer campo disponible para invitaciones
                 const firstAdmin = data.campos?.find((c: Campo) => c.isAdmin)
                 if (firstAdmin) {
                     setSelectedCampo(firstAdmin.id)
                 }
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Error silencioso
         }
     }
 
