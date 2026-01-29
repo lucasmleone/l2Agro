@@ -36,6 +36,17 @@ interface Unidad {
     name: string
 }
 
+interface Cosecha {
+    id: number
+    created_at: string
+    rendimiento: number
+    humedad: number | null
+    unidad_id: number
+    campana_id: number
+    Unidades?: { name: string }
+    Campañas?: { name: string, Lotes?: { name: string, Campos?: { name: string } } }
+}
+
 function CosechaForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -60,6 +71,11 @@ function CosechaForm() {
 
     const [status, setStatus] = useState('')
     const [isError, setIsError] = useState(false)
+    const [cosechas, setCosechas] = useState<Cosecha[]>([])
+    const [loadingCosechas, setLoadingCosechas] = useState(false)
+    const [selectedCosecha, setSelectedCosecha] = useState<Cosecha | null>(null)
+    const [showModal, setShowModal] = useState(false)
+    const [deleting, setDeleting] = useState(false)
 
     useEffect(() => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -187,6 +203,55 @@ function CosechaForm() {
             setLoadingCampanas(false)
         }
     }
+
+    const loadCosechas = async (tgId: number, campanaId?: number) => {
+        setLoadingCosechas(true)
+        try {
+            const url = campanaId
+                ? `/api/telegram/cosechas?telegram_id=${tgId}&campana_id=${campanaId}`
+                : `/api/telegram/cosechas?telegram_id=${tgId}`
+            const res = await fetch(url)
+            const data = await res.json()
+            if (res.ok) {
+                setCosechas(data.cosechas || [])
+            }
+        } catch {
+            // silencioso
+        } finally {
+            setLoadingCosechas(false)
+        }
+    }
+
+    const handleDeleteCosecha = async () => {
+        if (!selectedCosecha || !telegramIdRef.current) return
+        setDeleting(true)
+        try {
+            const res = await fetch('/api/telegram/cosecha', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegram_id: telegramIdRef.current,
+                    cosecha_id: selectedCosecha.id
+                })
+            })
+            if (res.ok) {
+                setCosechas(prev => prev.filter(c => c.id !== selectedCosecha.id))
+                setShowModal(false)
+                setSelectedCosecha(null)
+            }
+        } catch {
+            // silencioso
+        } finally {
+            setDeleting(false)
+        }
+    }
+
+    // Cargar cosechas cuando cambia la campaña
+    useEffect(() => {
+        if (telegramIdRef.current && selectedCampana) {
+            loadCosechas(telegramIdRef.current, selectedCampana)
+        }
+    }, [selectedCampana])
 
     const handleCampoChange = (campoId: number) => {
         setSelectedCampo(campoId)
@@ -545,7 +610,150 @@ function CosechaForm() {
                 >
                     {submitting ? 'Registrando...' : 'Registrar cosecha'}
                 </button>
+
+                {/* Lista de cosechas registradas */}
+                {cosechas.length > 0 && (
+                    <div style={{ marginTop: '24px' }}>
+                        <h3 style={{
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: colors.text,
+                            marginBottom: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            <span>🌾</span>
+                            <span>Cosechas registradas</span>
+                            {loadingCosechas && <span style={{ color: colors.textMuted, fontSize: '12px' }}>cargando...</span>}
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {cosechas.slice(0, 5).map(cosecha => (
+                                <div
+                                    key={cosecha.id}
+                                    onClick={() => { setSelectedCosecha(cosecha); setShowModal(true) }}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '12px',
+                                        background: colors.card,
+                                        borderRadius: '8px',
+                                        border: `1px solid ${colors.cardBorder}`,
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div>
+                                        <div style={{ fontSize: '14px', color: colors.text, fontWeight: 500 }}>
+                                            {new Date(cosecha.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: colors.textMuted }}>
+                                            {cosecha.humedad ? `${cosecha.humedad}% humedad` : 'Sin humedad'}
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        fontSize: '16px',
+                                        fontWeight: 600,
+                                        color: colors.accent,
+                                        textAlign: 'right'
+                                    }}>
+                                        <div>{cosecha.rendimiento}</div>
+                                        <div style={{ fontSize: '11px', color: colors.textMuted }}>
+                                            {cosecha.Unidades?.name || 'kg/ha'}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Modal de confirmación */}
+            {showModal && selectedCosecha && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        background: colors.card,
+                        borderRadius: '12px',
+                        padding: '20px',
+                        width: '85%',
+                        maxWidth: '320px',
+                        border: `1px solid ${colors.cardBorder}`
+                    }}>
+                        <h3 style={{ fontSize: '16px', color: colors.text, margin: '0 0 16px 0', textAlign: 'center' }}>
+                            Registro de cosecha
+                        </h3>
+                        <div style={{ marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ color: colors.textMuted, fontSize: '13px' }}>Fecha:</span>
+                                <span style={{ color: colors.text, fontSize: '13px' }}>
+                                    {new Date(selectedCosecha.created_at).toLocaleDateString('es-AR')}
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ color: colors.textMuted, fontSize: '13px' }}>Rendimiento:</span>
+                                <span style={{ color: colors.accent, fontSize: '13px', fontWeight: 600 }}>
+                                    {selectedCosecha.rendimiento} {selectedCosecha.Unidades?.name || 'kg/ha'}
+                                </span>
+                            </div>
+                            {selectedCosecha.humedad && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ color: colors.textMuted, fontSize: '13px' }}>Humedad:</span>
+                                    <span style={{ color: colors.text, fontSize: '13px' }}>
+                                        {selectedCosecha.humedad}%
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                                onClick={() => { setShowModal(false); setSelectedCosecha(null) }}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    background: colors.cardBorder,
+                                    color: colors.text,
+                                    border: 'none',
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleDeleteCosecha}
+                                disabled={deleting}
+                                style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    background: colors.error,
+                                    color: '#fff',
+                                    border: 'none',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    cursor: deleting ? 'not-allowed' : 'pointer',
+                                    opacity: deleting ? 0.6 : 1
+                                }}
+                            >
+                                {deleting ? 'Eliminando...' : '🗑️ Eliminar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

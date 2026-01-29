@@ -298,6 +298,36 @@ export default function HomePage() {
                     </p>
                 </div>
             )}
+
+            {/* FAB Ver Datos */}
+            {hasCampos && (
+                <button
+                    onClick={() => router.push('/telegram/datos')}
+                    style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        right: '24px',
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '28px',
+                        background: colors.accent,
+                        color: '#000',
+                        border: 'none',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 100
+                    }}
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="m19 9-5 5-4-4-3 3" />
+                    </svg>
+                </button>
+            )}
+
         </div>
     )
 }

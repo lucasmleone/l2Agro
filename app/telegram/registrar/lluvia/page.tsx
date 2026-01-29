@@ -47,8 +47,6 @@ function LluviaForm() {
     const [selectedLluvia, setSelectedLluvia] = useState<Lluvia | null>(null)
     const [showModal, setShowModal] = useState(false)
     const [deleting, setDeleting] = useState(false)
-    const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth())
-    const [calendarYear, setCalendarYear] = useState(new Date().getFullYear())
 
     // Función para parsear start_param de Telegram
     // Formato esperado: campo-1__fecha-2025-02-21__mm-20
@@ -228,45 +226,7 @@ function LluviaForm() {
         }
     }, [selectedCampo])
 
-    // Funciones del calendario
-    const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate()
-    const getFirstDayOfMonth = (month: number, year: number) => {
-        const day = new Date(year, month, 1).getDay()
-        return day === 0 ? 6 : day - 1 // Lunes = 0
-    }
 
-    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-
-    const prevMonth = () => {
-        if (calendarMonth === 0) {
-            setCalendarMonth(11)
-            setCalendarYear(calendarYear - 1)
-        } else {
-            setCalendarMonth(calendarMonth - 1)
-        }
-    }
-
-    const nextMonth = () => {
-        if (calendarMonth === 11) {
-            setCalendarMonth(0)
-            setCalendarYear(calendarYear + 1)
-        } else {
-            setCalendarMonth(calendarMonth + 1)
-        }
-    }
-
-    // Obtener lluvias del mes actual como mapa { día: mm }
-    const lluviasDelMes = lluvias.reduce((acc, l) => {
-        const d = new Date(l.created_at)
-        if (d.getMonth() === calendarMonth && d.getFullYear() === calendarYear) {
-            const dia = d.getDate()
-            acc[dia] = (acc[dia] || 0) + l.milimetros
-        }
-        return acc
-    }, {} as Record<number, number>)
-
-    const totalMes = Object.values(lluviasDelMes).reduce((a, b) => a + b, 0)
 
 
     const BackIcon = () => (
@@ -494,148 +454,6 @@ function LluviaForm() {
                 >
                     {submitting ? 'Guardando...' : 'Guardar'}
                 </button>
-
-                {/* Calendario de lluvias */}
-                {selectedCampo && (
-                    <div style={{ marginTop: '24px' }}>
-                        {/* Header del calendario */}
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '12px'
-                        }}>
-                            <button
-                                onClick={prevMonth}
-                                style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '8px',
-                                    background: colors.card,
-                                    border: `1px solid ${colors.cardBorder}`,
-                                    color: colors.textMuted,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                ‹
-                            </button>
-                            <span style={{ fontSize: '14px', fontWeight: 600, color: colors.text }}>
-                                {monthNames[calendarMonth]} {calendarYear}
-                            </span>
-                            <button
-                                onClick={nextMonth}
-                                style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '8px',
-                                    background: colors.card,
-                                    border: `1px solid ${colors.cardBorder}`,
-                                    color: colors.textMuted,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                ›
-                            </button>
-                        </div>
-
-                        {/* Días de la semana */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(7, 1fr)',
-                            gap: '4px',
-                            marginBottom: '8px'
-                        }}>
-                            {['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa', 'Do'].map(d => (
-                                <div key={d} style={{
-                                    textAlign: 'center',
-                                    fontSize: '11px',
-                                    color: colors.textMuted,
-                                    padding: '4px'
-                                }}>
-                                    {d}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Grid de días */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(7, 1fr)',
-                            gap: '4px'
-                        }}>
-                            {/* Espacios vacíos antes del primer día */}
-                            {Array.from({ length: getFirstDayOfMonth(calendarMonth, calendarYear) }).map((_, i) => (
-                                <div key={`empty-${i}`} style={{ aspectRatio: '1' }} />
-                            ))}
-
-                            {/* Días del mes */}
-                            {Array.from({ length: getDaysInMonth(calendarMonth, calendarYear) }).map((_, i) => {
-                                const dia = i + 1
-                                const mmDia = lluviasDelMes[dia]
-                                const hasRain = mmDia !== undefined
-                                const intensity = hasRain ? Math.min(mmDia / 50, 1) : 0 // 50mm = máxima intensidad
-
-                                return (
-                                    <div
-                                        key={dia}
-                                        onClick={() => {
-                                            if (hasRain) {
-                                                const lluvia = lluvias.find(l => new Date(l.created_at).getDate() === dia)
-                                                if (lluvia) {
-                                                    setSelectedLluvia(lluvia)
-                                                    setShowModal(true)
-                                                }
-                                            }
-                                        }}
-                                        style={{
-                                            aspectRatio: '1',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: '6px',
-                                            background: hasRain
-                                                ? `rgba(34, 197, 94, ${0.1 + intensity * 0.4})`
-                                                : 'transparent',
-                                            border: hasRain ? `1px solid ${colors.accent}40` : '1px solid transparent',
-                                            cursor: hasRain ? 'pointer' : 'default',
-                                            fontSize: '12px',
-                                            color: hasRain ? colors.accent : colors.textMuted
-                                        }}
-                                    >
-                                        <span style={{ fontWeight: hasRain ? 600 : 400 }}>{dia}</span>
-                                        {hasRain && (
-                                            <span style={{ fontSize: '8px', marginTop: '1px' }}>
-                                                {mmDia}
-                                            </span>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                        </div>
-
-                        {/* Total del mes */}
-                        {totalMes > 0 && (
-                            <div style={{
-                                marginTop: '12px',
-                                padding: '10px',
-                                background: colors.accentDim,
-                                borderRadius: '8px',
-                                textAlign: 'center',
-                                fontSize: '13px',
-                                color: colors.accent
-                            }}>
-                                Total {monthNames[calendarMonth]}: <strong>{totalMes}mm</strong>
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Lista de lluvias registradas */}
                 {lluvias.length > 0 && (
