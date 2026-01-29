@@ -43,19 +43,27 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No tienes acceso a este lote' }, { status: 403 })
         }
 
-        // 4. Obtener campañas del lote, ordenadas por nombre descendente
-        // Esto ordena "Soja 26/27" antes que "Soja 24/25" para que el período más reciente aparezca primero
+        // 4. Obtener campañas del lote
         const { data: campanas, error } = await supabaseAdmin
             .from('Campañas')
             .select('id, name, created_at')
             .eq('lote_id', lote_id)
-            .order('name', { ascending: false })
 
         if (error) {
             return NextResponse.json({ error: 'Error cargando campañas' }, { status: 500 })
         }
 
-        return NextResponse.json({ campanas: campanas || [] })
+        // Ordenar por período extraído del nombre (ej: "Soja 24/25" -> "24/25")
+        // Así 26/27 aparece antes que 24/25
+        const sortedCampanas = (campanas || []).sort((a, b) => {
+            // Extraer período del nombre (últimos 5 caracteres: "XX/XX")
+            const periodA = a.name?.match(/(\d{2}\/\d{2})$/)?.[1] || '00/00'
+            const periodB = b.name?.match(/(\d{2}\/\d{2})$/)?.[1] || '00/00'
+            // Ordenar descendente
+            return periodB.localeCompare(periodA)
+        })
+
+        return NextResponse.json({ campanas: sortedCampanas })
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 })
